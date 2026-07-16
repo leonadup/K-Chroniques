@@ -205,7 +205,16 @@ function commentThreadHtml(entry) {
     <div class="fds-comments">
       <p class="fds-comments-label">${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</p>
       <div>
-        ${comments.map((c) => `<div class="fds-comment"><b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}</div>`).join('')}
+        ${comments
+          .map(
+            (c) => `
+          <div class="fds-comment">
+            <b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}
+            ${c.reply_text ? `<div class="fds-question-reply">${escapeHtml(c.reply_text)}</div>` : ''}
+          </div>
+        `
+          )
+          .join('')}
       </div>
       <div class="fds-comment-form">
         <input type="text" placeholder="Ton prénom" maxlength="40" data-comment-author="${entry.id}" />
@@ -288,12 +297,14 @@ function openEntryModal(entryId) {
   });
 }
 
-function setupQuestionBox() {
+async function setupQuestionBox() {
   const box = document.getElementById('question-box');
   box.innerHTML = `
     <div class="fds-question-panel">
-      <p class="fds-question-title">Une question ?</p>
-      <p class="hint-text" style="margin-bottom:12px;">Elle trouvera sa réponse dans une prochaine entrée.</p>
+      <p class="fds-question-title">Questions & réponses</p>
+      <div id="question-history"></div>
+      <p class="fds-question-title" style="margin-top:18px;">Une question ?</p>
+      <p class="hint-text" style="margin-bottom:12px;">Elle trouvera sa réponse ici ou dans une prochaine entrée.</p>
       <div class="fds-comment-form">
         <input type="text" placeholder="Ton prénom (optionnel)" maxlength="40" id="question-author" />
         <textarea placeholder="Ta question..." maxlength="500" id="question-text"></textarea>
@@ -302,6 +313,8 @@ function setupQuestionBox() {
       <p class="hint-text" id="question-sent" style="display:none; margin-top:8px;">Question envoyée, merci !</p>
     </div>
   `;
+
+  await loadQuestionHistory();
 
   document.getElementById('question-submit').addEventListener('click', async () => {
     const author = document.getElementById('question-author').value.trim();
@@ -313,4 +326,30 @@ function setupQuestionBox() {
       document.getElementById('question-sent').style.display = 'block';
     }
   });
+}
+
+async function loadQuestionHistory() {
+  const historyEl = document.getElementById('question-history');
+  const { data, error } = await supabase
+    .from('questions')
+    .select('id, circle_id, author_name, question_text, reply_text, created_at')
+    .eq('circle_id', circleId)
+    .not('reply_text', 'is', null)
+    .order('created_at', { ascending: false });
+
+  if (error || !data || data.length === 0) {
+    historyEl.innerHTML = `<p class="hint-text">Pas encore de question répondue ici.</p>`;
+    return;
+  }
+
+  historyEl.innerHTML = data
+    .map(
+      (q) => `
+      <div class="fds-comment">
+        <b>${q.author_name ? escapeHtml(q.author_name) : 'Anonyme'}</b> — ${escapeHtml(q.question_text)}
+        <div class="fds-question-reply">${escapeHtml(q.reply_text)}</div>
+      </div>
+    `
+    )
+    .join('');
 }

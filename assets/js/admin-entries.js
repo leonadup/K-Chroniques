@@ -8,7 +8,7 @@ const NON_ADMIN_CIRCLES = Object.values(CIRCLES).filter((c) => !c.isAdmin);
 export async function renderEntryList(container, type) {
   const { data, error } = await supabase
     .from('entries')
-    .select('id, title, entry_date, published')
+    .select('id, title, entry_date, published, comments(count), reactions(count)')
     .eq('type', type)
     .order('entry_date', { ascending: false });
 
@@ -28,14 +28,22 @@ export async function renderEntryList(container, type) {
         (data || []).length === 0
           ? `<p class="hint-text">Rien pour l'instant.</p>`
           : data
-              .map(
-                (e) => `
+              .map((e) => {
+                const commentCount = e.comments?.[0]?.count ?? 0;
+                const reactionCount = e.reactions?.[0]?.count ?? 0;
+                const engagement = [
+                  commentCount > 0 ? `💬 ${commentCount}` : '',
+                  reactionCount > 0 ? `❤️ ${reactionCount}` : ''
+                ]
+                  .filter(Boolean)
+                  .join(' · ');
+                return `
         <div class="adm-list-item" data-entry-open="${e.id}">
           <span class="adm-list-item-title">${escapeHtml(e.title)}${!e.published ? '<span class="adm-draft-tag">Brouillon</span>' : ''}</span>
-          <span class="adm-list-item-meta">${new Date(e.entry_date + 'T00:00:00').toLocaleDateString('fr-FR')}</span>
+          <span class="adm-list-item-meta">${new Date(e.entry_date + 'T00:00:00').toLocaleDateString('fr-FR')}${engagement ? ' · ' + engagement : ''}</span>
         </div>
-      `
-              )
+      `;
+              })
               .join('')
       }
     </div>
@@ -117,6 +125,7 @@ async function renderEntryEditor(container, type, entryId) {
         ${entry ? `<button class="btn btn-danger" id="f-delete">Supprimer</button>` : ''}
       </div>
 
+      ${entry ? `<div id="engagement-editor" style="margin-top:24px; border-top:1px solid var(--line); padding-top:18px;"></div>` : ''}
       ${entry && type === 'recit' ? `<div id="photos-editor" style="margin-top:24px; border-top:1px solid var(--line); padding-top:18px;"></div>` : ''}
     </div>
   `;
@@ -179,9 +188,66 @@ async function renderEntryEditor(container, type, entryId) {
     });
   }
 
+  if (entry) {
+    renderEngagementEditor(document.getElementById('engagement-editor'), entry.id);
+  }
+
   if (entry && type === 'recit') {
     renderPhotosEditor(document.getElementById('photos-editor'), entry.id, photos, allowedVisibility);
   }
+}
+
+async function renderEngagementEditor(el, entryId) {
+  const [{ data: comments }, { data: reactions }] = await Promise.all([
+    supabase.from('comments').select('id, circle_id, author_name, body, reply_text, created_at').eq('entry_id', entryId).order('created_at', { ascending: true }),
+    supabase.from('reactions').select('emoji').eq('entry_id', entryId)
+  ]);
+
+  const tally = {};
+  (reactions || []).forEach((r) => (tally[r.emoji] = (tally[r.emoji] || 0) + 1));
+  const tallyHtml = Object.entries(tally)
+    .map(([emoji, count]) => `<span class="adm-reaction-tally">${emoji} ${count}</span>`)
+    .join(' ');
+
+  el.innerHTML = `
+    <p style="font-family:var(--font-serif); font-size:18px; font-weight:600; margin:0 0 10px;">Réactions & commentaires</p>
+    ${tallyHtml ? `<div style="margin-bottom:14px;">${tallyHtml}</div>` : `<p class="hint-text">Pas encore de réaction.</p>`}
+    ${
+      (comments || []).length === 0
+        ? `<p class="hint-text">Pas encore de commentaire.</p>`
+        : `<div class="adm-list">
+        ${comments
+          .map(
+            (c) => `
+          <div class="adm-list-item" style="flex-direction:column; align-items:flex-start; gap:8px; cursor:default;">
+            <span class="adm-list-item-meta">${CIRCLES[c.circle_id]?.label ?? c.circle_id} · ${escapeHtml(c.author_name)} · ${new Date(c.created_at).toLocaleDateString('fr-FR')}</span>
+            <p style="margin:0; font-size:14px;">${escapeHtml(c.body)}</p>
+            <div class="adm-reply-form">
+              <textarea placeholder="Ta réponse (visible sous son commentaire)..." data-comment-reply-text="${c.id}">${escapeHtml(c.reply_text || '')}</textarea>
+              <button class="btn-link" data-comment-save-reply="${c.id}">Enregistrer la réponse</button>
+              <span class="hint-text" data-comment-reply-saved="${c.id}" style="display:none;">Réponse enregistrée.</span>
+            </div>
+          </div>
+        `
+          )
+          .join('')}
+      </div>`
+    }
+  `;
+
+  el.querySelectorAll('[data-comment-save-reply]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      const id = btn.dataset.commentSaveReply;
+      const textarea = el.querySelector(`[data-comment-reply-text="${id}"]`);
+      const reply = textarea.value.trim();
+      const { error } = await supabase.from('comments').update({ reply_text: reply || null }).eq('id', id);
+      if (!error) {
+        const saved = el.querySelector(`[data-comment-reply-saved="${id}"]`);
+        saved.style.display = 'inline';
+        setTimeout(() => (saved.style.display = 'none'), 2000);
+      }
+    });
+  });
 }
 
 async function uniqueSlug(title) {

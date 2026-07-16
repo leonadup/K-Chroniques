@@ -14,7 +14,7 @@ export const SUPABASE_ANON_KEY = 'sb_publishable_OWoN-xq1Z_wnCl8dQx_0qQ_C_E0LQ0k
 // saurait où regarder. C'est un filtre pour que chacun tombe sur l'espace
 // qui le concerne, pas un verrou — voir la note en haut de schema.sql.
 export const ACCESS_CODES = {
-  parents: 'bienvenue',
+  parents: 'JeVousAimeF0RT!',
   famille: 'bienvenue',
   amis: 'bienvenue',
   copain: 'mondidouchatalacremedeNOISETTE<3'

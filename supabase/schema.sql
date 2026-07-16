@@ -120,6 +120,7 @@ create table if not exists comments (
   circle_id text not null,
   author_name text not null,
   body text not null,
+  reply_text text,
   created_at timestamptz not null default now()
 );
 
@@ -131,6 +132,8 @@ create policy "commentaires ouverts en lecture" on comments for select using (tr
 create policy "commentaires ouverts en écriture" on comments for insert with check (true);
 create policy "suppression des commentaires réservée à Moi" on comments
   for delete using (auth.role() = 'authenticated');
+create policy "réponse aux commentaires réservée à Moi" on comments
+  for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 
 -- ---------------------------------------------------------------------------
 -- Bandeau "où j'en suis" — une seule ligne, toujours id = true
@@ -163,6 +166,7 @@ create table if not exists questions (
   question_text text not null,
   status text not null default 'pending' check (status in ('pending', 'answered')),
   answered_entry_id uuid references entries(id) on delete set null,
+  reply_text text,
   created_at timestamptz not null default now()
 );
 
@@ -173,6 +177,11 @@ alter table questions enable row level security;
 create policy "questions posables par tous" on questions for insert with check (true);
 create policy "questions lisibles par Moi" on questions
   for select using (auth.role() = 'authenticated');
+-- une question à laquelle Moi a répondu directement (reply_text) redevient
+-- lisible par tout le monde : c'est ce qui permet à la personne qui l'a
+-- posée (ou n'importe qui du même cercle) de revenir voir la réponse.
+create policy "questions avec réponse lisibles par tous" on questions
+  for select using (reply_text is not null);
 create policy "questions modifiables par Moi" on questions
   for update using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
 

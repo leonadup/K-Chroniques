@@ -3,7 +3,7 @@ import { applySeason } from './season.js';
 import { initFinances } from './finances.js';
 import { renderEntryList } from './admin-entries.js';
 import { renderBandeauAdmin } from './admin-bandeau.js';
-import { renderQuestionsAdmin } from './admin-questions.js';
+import { renderQuestionsAdmin, refreshQuestionsBadge } from './admin-questions.js';
 
 applySeason();
 
@@ -50,6 +50,7 @@ function showAdmin() {
   });
 
   switchTab('finances');
+  refreshQuestionsBadge();
 }
 
 function switchTab(name) {
