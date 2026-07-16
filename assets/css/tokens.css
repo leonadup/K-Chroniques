@@ -1,0 +1,48 @@
+@import url('https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap');
+
+:root {
+  --paper: #f5efe3;
+  --paper-deep: #ede3d1;
+  --ink: #20263b;
+  --ink-soft: #5b5748;
+  --persimmon: #c1502b;
+  --celadon: #7fa98f;
+  --gold: #b8892b;
+  --line: #d8cdb4;
+  --white: #fffdf8;
+  --red: #b4432f;
+
+  --season-accent: var(--persimmon);
+  --season-accent-soft: color-mix(in srgb, var(--season-accent) 18%, var(--paper));
+
+  --font-serif: 'Fraunces', serif;
+  --font-sans: 'IBM Plex Sans', sans-serif;
+  --font-mono: 'IBM Plex Mono', monospace;
+}
+
+/* Seollal (nouvel an lunaire, jan-fév) : rouge et or */
+:root[data-season='seollal'] { --season-accent: #b4432f; }
+/* Cerisiers en fleurs (mars-avril) : rose pâle */
+:root[data-season='cerisiers'] { --season-accent: #d98a9c; }
+/* Été (mai-août) : palette vive */
+:root[data-season='ete'] { --season-accent: #c1502b; }
+/* Chuseok (sept-oct) : tons dorés */
+:root[data-season='chuseok'] { --season-accent: #b8892b; }
+/* Hiver (nov-déc) : bleu-gris, blanc */
+:root[data-season='hiver'] { --season-accent: #5b6b8c; }
+
+* { box-sizing: border-box; }
+
+html, body { padding: 0; margin: 0; }
+
+body {
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+  line-height: 1.5;
+}
+
+h1, h2, h3 { font-family: var(--font-serif); font-weight: 600; margin: 0; }
+a { color: inherit; }
+button { font-family: inherit; }
+img { max-width: 100%; }

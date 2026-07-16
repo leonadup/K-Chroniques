@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Les K-Chroniques de Léona</title>
+  <link rel="stylesheet" href="assets/css/tokens.css" />
+  <link rel="stylesheet" href="assets/css/site.css" />
+</head>
+<body>
+  <div id="fds-root">
+    <div class="fds-header">
+      <div>
+        <p class="fds-title">Les K-Chroniques de Léona</p>
+        <p class="fds-circle-tag" id="circle-tag"></p>
+      </div>
+      <button class="fds-logout" id="logout-btn">Se déconnecter</button>
+    </div>
+
+    <div class="fds-bandeau" id="bandeau" style="display: none"></div>
+
+    <div class="fds-tabs">
+      <button class="fds-tab active" data-tab="timeline">Timeline</button>
+      <button class="fds-tab" data-tab="recits">Récits</button>
+      <button class="fds-tab" data-tab="lettres" id="lettres-tab" style="display: none">Lettres</button>
+    </div>
+
+    <div class="fds-feed" id="panel-timeline"></div>
+    <div class="fds-feed" id="panel-recits" style="display: none"></div>
+    <div class="fds-feed" id="panel-lettres" style="display: none"></div>
+
+    <div class="fds-question-box" id="question-box"></div>
+  </div>
+
+  <div id="entry-modal-mount"></div>
+
+  <script type="module" src="assets/js/cercle-page.js"></script>
+</body>
+</html>

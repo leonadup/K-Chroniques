@@ -1,0 +1,111 @@
+# Les K-Chroniques de Léona
+
+Journal de voyage privé (PVT Corée du Sud) — site 100 % statique (HTML/CSS/JS,
+aucun outil de build) + Supabase.
+
+Aucune installation n'est nécessaire pour faire tourner ce site : pas de
+Node.js, pas de `npm install`. Le navigateur appelle Supabase directement.
+
+## Comment ça marche (en bref)
+
+- **Pas de build.** Tous les fichiers sont servis tels quels. Ouvrir
+  `index.html` (via un petit serveur local, voir plus bas) ou déployer le
+  dossier sur n'importe quel hébergeur statique suffit.
+- **Un seul vrai verrou de sécurité : le compte "Moi".** Créer/modifier les
+  Récits, les Lettres, le Bandeau et les Finances nécessite d'être connectée
+  avec le compte Supabase Auth de Léona (email + mot de passe). C'est la
+  seule chose qui est réellement protégée côté base de données (RLS).
+- **Les codes des 4 autres cercles sont une simple politesse, pas une
+  sécurité.** Ils sont écrits en clair dans `assets/js/config.js` et
+  seulement vérifiés dans le navigateur. N'importe qui d'un peu curieux
+  avec les outils de développeur pourrait contourner le filtre par cercle
+  (par ex. lire une Lettre en tant que Famille). Accepté sciemment vu le
+  contexte (proches, pas un site sensible) — voir la note en haut de
+  `supabase/schema.sql`.
+
+## 1. Créer le projet Supabase
+
+1. Crée un projet sur [supabase.com](https://supabase.com) (gratuit).
+2. **SQL Editor** → colle et exécute tout le contenu de
+   [`supabase/schema.sql`](supabase/schema.sql). Ça crée les tables, les
+   règles de sécurité (RLS) et la fonction `reste_a_vivre_du_mois()`.
+3. **Storage** → crée un bucket nommé `photos`, coche **Public bucket**.
+4. **Authentication → Users → Add user** → crée UN compte pour toi
+   (Léona), avec l'email et le mot de passe de ton choix. C'est ce compte
+   qui te connecte sur `moi.html`. Personne d'autre n'a besoin de compte.
+
+## 2. Remplir la config
+
+Ouvre [`assets/js/config.js`](assets/js/config.js) et remplace :
+
+- `SUPABASE_URL` et `SUPABASE_ANON_KEY` — Project Settings > API (la clé
+  "anon" est faite pour être publique, ce n'est pas un secret à cacher).
+- Les 4 codes dans `ACCESS_CODES` (`parents`, `famille`, `amis`, `copain`) —
+  ce que tu veux, ce sont juste des mots de passe symboliques.
+
+Fais la même chose dans
+[`.github/workflows/ping-supabase.yml`](.github/workflows/ping-supabase.yml)
+(mêmes `SUPABASE_URL` / clé anon, voir étape 5).
+
+## 3. Tester en local (optionnel)
+
+Comme les pages utilisent des modules JavaScript (`type="module"`), les
+ouvrir directement en double-cliquant (`file://...`) ne fonctionnera pas à
+cause des restrictions de sécurité du navigateur — il faut un petit serveur
+local. Si tu as Python d'installé :
+
+```
+python -m http.server 8080
+```
+
+puis ouvre `http://localhost:8080`. Sinon, l'extension VS Code **Live
+Server** fait la même chose en un clic. Aucun des deux n'est obligatoire :
+tu peux aussi tester directement en ligne après déploiement (étape 4).
+
+## 4. Déployer
+
+N'importe quel hébergeur statique fonctionne, aucun n'a besoin de "build
+command" (laisse ce champ vide si on te le demande) :
+
+- **Vercel** — importe le repo GitHub, ne touche à aucun réglage, déploie.
+- **GitHub Pages** — Settings > Pages > Deploy from branch, choisis `main`.
+  Avantage : zéro compte supplémentaire, tu as déjà GitHub.
+- **Netlify** — pareil que Vercel.
+
+## 5. Le cron quotidien (garder Supabase actif)
+
+Le plan gratuit Supabase met le projet en pause après 7 jours sans
+activité. [`.github/workflows/ping-supabase.yml`](.github/workflows/ping-supabase.yml)
+fait un appel quotidien automatique (6h UTC) dès que ce fichier est sur
+GitHub — rien à activer, GitHub Actions le détecte tout seul. Vérifiable
+dans l'onglet **Actions** du repo (tu peux aussi le lancer à la main avec le
+bouton "Run workflow").
+
+## Ce qui est en place
+
+- **Accès par code** (Parents / Famille / Amis / Copain) — `acceder.html`,
+  filtre client-side, voir l'avertissement de sécurité plus haut.
+- **Compte Moi réel** (Supabase Auth) — seule vraie protection du site,
+  couvre l'écriture des récits/lettres/photos/finances/bandeau.
+- **Timeline / Récits / Lettres** avec réactions emoji et commentaires,
+  boîte à questions, bandeau "où j'en suis" — `cercle.html`.
+- **Résumé Finances "reste à vivre"** affiché automatiquement côté Parents,
+  via la fonction SQL `reste_a_vivre_du_mois()` — c'est la seule donnée
+  financière qui a une vraie protection en base (le détail par catégorie
+  reste inaccessible sans le compte Moi, même en lecture).
+- **Upload de photo avec compression automatique** (redimensionnement
+  1600px, JPEG) — `assets/js/compress-image.js`, invisible pour
+  l'utilisatrice.
+- **Finances** — reprise fidèle du prototype validé, connectée à Supabase —
+  `assets/js/finances.js`.
+- **Accent de couleur saisonnier** automatique — `assets/js/season.js`.
+- **Cron GitHub Actions** quotidien pour éviter la pause Supabase.
+
+## Ce qu'il reste à faire
+
+- **Jalons automatiques sur la Timeline**, **export album souvenir**,
+  **onglet Coréen** : explicitement hors scope V1, voir le cahier des
+  charges.
+- Rien n'a pu être testé dans un vrai navigateur pendant l'écriture de ce
+  code (pas d'environnement disponible) — attends-toi à corriger deux ou
+  trois petits bugs à la première utilisation réelle.

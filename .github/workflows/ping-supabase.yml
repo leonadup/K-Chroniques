@@ -1,0 +1,27 @@
+name: Ping Supabase quotidien
+
+# Le plan gratuit Supabase met le projet en pause après 7 jours sans
+# activité. Ce workflow fait une lecture triviale une fois par jour pour
+# l'empêcher — remplace le "Vercel Cron" prévu initialement, puisque le
+# site est maintenant 100 % statique (pas de fonction serverless à
+# déclencher).
+
+on:
+  schedule:
+    - cron: '0 6 * * *' # tous les jours à 6h UTC
+  workflow_dispatch: {} # bouton "Run workflow" manuel dans l'onglet Actions
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Lire une table publique
+        run: |
+          curl --fail --silent --show-error \
+            "$SUPABASE_URL/rest/v1/status_banner?select=id&limit=1" \
+            -H "apikey: $SUPABASE_ANON_KEY"
+        env:
+          # Mêmes valeurs que dans assets/js/config.js (la clé "anon" est
+          # publique par design chez Supabase, pas besoin d'un secret GitHub).
+          SUPABASE_URL: https://iglwwrfhfvzxifjbyusa.supabase.co
+          SUPABASE_ANON_KEY: sb_publishable_OWoN-xq1Z_wnCl8dQx_0qQ_C_E0LQ0k
