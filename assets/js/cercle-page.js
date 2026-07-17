@@ -12,6 +12,7 @@ let allEntries = [];
 let departDate = null;
 let leafletMap = null;
 let leafletMarkersLayer = null;
+let answeredQuestionIds = [];
 
 const MILESTONE_THRESHOLDS = [
   { days: 7, label: '1 semaine sur place' },
@@ -45,11 +46,12 @@ function setupTabs() {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.fds-tab').forEach((t) => t.classList.remove('active'));
       tab.classList.add('active');
-      ['timeline', 'recits', 'galerie', 'carte', 'lettres'].forEach((name) => {
+      ['timeline', 'recits', 'galerie', 'carte', 'lettres', 'questions'].forEach((name) => {
         const panel = document.getElementById('panel-' + name);
         if (panel) panel.style.display = name === tab.dataset.tab ? '' : 'none';
       });
       if (tab.dataset.tab === 'carte') initOrRefreshMap();
+      if (tab.dataset.tab === 'questions') markQuestionsSeen();
     });
   });
 }
@@ -467,6 +469,8 @@ async function loadQuestionHistory() {
 
   if (error || !data || data.length === 0) {
     historyEl.innerHTML = `<p class="hint-text">Pas encore de question répondue ici.</p>`;
+    answeredQuestionIds = [];
+    updateQuestionsBadge();
     return;
   }
 
@@ -480,4 +484,29 @@ async function loadQuestionHistory() {
     `
     )
     .join('');
+
+  answeredQuestionIds = data.map((q) => q.id);
+  updateQuestionsBadge();
+}
+
+function getSeenQuestionIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem(`fds_questions_seen_${circleId}`) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function updateQuestionsBadge() {
+  const badge = document.getElementById('questions-badge');
+  if (!badge) return;
+  const seen = getSeenQuestionIds();
+  const unseenCount = answeredQuestionIds.filter((id) => !seen.has(id)).length;
+  badge.textContent = unseenCount;
+  badge.style.display = unseenCount > 0 ? '' : 'none';
+}
+
+function markQuestionsSeen() {
+  localStorage.setItem(`fds_questions_seen_${circleId}`, JSON.stringify(answeredQuestionIds));
+  updateQuestionsBadge();
 }

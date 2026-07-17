@@ -133,6 +133,10 @@
   gap: 6px;
 }
 .fds-tab.active { color: var(--season-accent); background: var(--season-accent-soft); border-bottom-color: var(--season-accent); }
+.fds-tab-badge {
+  display: inline-block; background: var(--red); color: var(--white); font-family: var(--font-mono); font-size: 10px;
+  border-radius: 20px; padding: 1px 7px; vertical-align: middle;
+}
 
 .fds-feed { max-width: 760px; margin: 0 auto; padding: 24px 20px 40px; }
 
@@ -186,7 +190,6 @@
 .fds-comment-form input { flex: 1 1 120px; }
 .fds-comment-form textarea { flex: 3 1 220px; resize: vertical; min-height: 38px; }
 
-.fds-question-box { max-width: 760px; margin: 0 auto; padding: 0 20px 40px; }
 .fds-question-panel { background: var(--white); border: 1px solid var(--line); border-radius: 4px; padding: 18px 20px; }
 .fds-question-title { font-family: var(--font-serif); font-size: 17px; font-weight: 600; margin: 0 0 6px; }
 
