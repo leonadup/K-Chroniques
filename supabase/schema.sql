@@ -277,3 +277,12 @@ create policy "upload des photos réservé à Moi"
 create policy "suppression des photos réservée à Moi"
   on storage.objects for delete
   using (bucket_id = 'photos' and auth.role() = 'authenticated');
+
+-- ---------------------------------------------------------------------------
+-- Migration 001 — jalons automatiques (Timeline) + carte des lieux visités
+-- (voir supabase/migrations/001_jalons_et_carte.sql pour un projet existant)
+-- ---------------------------------------------------------------------------
+alter table status_banner add column if not exists depart_date date;
+
+alter table entries add column if not exists lat numeric;
+alter table entries add column if not exists lng numeric;

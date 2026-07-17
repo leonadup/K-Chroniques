@@ -15,6 +15,10 @@
   --season-accent: var(--persimmon);
   --season-accent-soft: color-mix(in srgb, var(--season-accent) 18%, var(--paper));
 
+  --recit-accent: var(--celadon);
+  --lettre-accent: var(--persimmon);
+  --milestone-accent: var(--gold);
+
   --font-serif: 'Fraunces', serif;
   --font-sans: 'IBM Plex Sans', sans-serif;
   --font-mono: 'IBM Plex Mono', monospace;

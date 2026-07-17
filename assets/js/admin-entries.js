@@ -89,6 +89,14 @@ async function renderEntryEditor(container, type, entryId) {
         <input type="text" id="f-location" value="${escapeHtml(entry?.location ?? '')}" />
       </div>
       <div class="field">
+        <label>Coordonnées GPS (optionnel, pour la Carte)</label>
+        <div style="display:flex; gap:10px;">
+          <input type="number" step="any" id="f-lat" placeholder="Latitude" value="${entry?.lat ?? ''}" />
+          <input type="number" step="any" id="f-lng" placeholder="Longitude" value="${entry?.lng ?? ''}" />
+        </div>
+        <p class="hint-text">Copie-colle depuis Google Maps (clic droit sur le lieu → les deux nombres tout en haut du menu).</p>
+      </div>
+      <div class="field">
         <label>Extrait (pour la Timeline, optionnel)</label>
         <input type="text" id="f-excerpt" maxlength="200" value="${escapeHtml(entry?.excerpt ?? '')}" />
       </div>
@@ -141,11 +149,16 @@ async function renderEntryEditor(container, type, entryId) {
       return;
     }
 
+    const latRaw = document.getElementById('f-lat').value.trim();
+    const lngRaw = document.getElementById('f-lng').value.trim();
+
     const payload = {
       type,
       title,
       entry_date: document.getElementById('f-date').value,
       location: document.getElementById('f-location').value.trim() || null,
+      lat: latRaw === '' ? null : Number(latRaw),
+      lng: lngRaw === '' ? null : Number(lngRaw),
       excerpt: document.getElementById('f-excerpt').value.trim() || null,
       body: document.getElementById('f-body').value,
       published: document.getElementById('f-published').checked,

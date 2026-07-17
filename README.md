@@ -81,6 +81,24 @@ GitHub — rien à activer, GitHub Actions le détecte tout seul. Vérifiable
 dans l'onglet **Actions** du repo (tu peux aussi le lancer à la main avec le
 bouton "Run workflow").
 
+## Mise à jour : jalons, galerie, carte (migration 001)
+
+Si ton projet Supabase existe déjà (créé avant cette mise à jour), va dans
+**SQL Editor** et exécute le contenu de
+[`supabase/migrations/001_jalons_et_carte.sql`](supabase/migrations/001_jalons_et_carte.sql)
+une seule fois. Ça ajoute :
+- `status_banner.depart_date` — renseigne-la dans `moi.html` > Bandeau pour
+  activer les jalons automatiques sur la Timeline ("1 mois sur place !").
+- `entries.lat` / `entries.lng` — renseigne-les (optionnel) sur un récit dans
+  `moi.html` pour qu'il apparaisse sur la Carte.
+
+(Pour une toute nouvelle installation, ces colonnes sont déjà incluses dans
+`schema.sql`, pas besoin de rejouer la migration séparément.)
+
+La Carte utilise [Leaflet](https://leafletjs.com/) chargé depuis un CDN
+(unpkg) — seule nouvelle dépendance externe du site, aucune installation
+nécessaire.
+
 ## Ce qui est en place
 
 - **Accès par code** (Parents / Famille / Amis / Copain) — `acceder.html`,
@@ -100,12 +118,19 @@ bouton "Run workflow").
   `assets/js/finances.js`.
 - **Accent de couleur saisonnier** automatique — `assets/js/season.js`.
 - **Cron GitHub Actions** quotidien pour éviter la pause Supabase.
+- **Galerie photo** dédiée, regroupant toutes les photos visibles pour le
+  cercle connecté — onglet Galerie de `cercle.html`.
+- **Jalons automatiques sur la Timeline** ("1 mois sur place !"), calculés
+  à partir de la date de départ renseignée dans le Bandeau.
+- **Carte interactive** (Leaflet/OpenStreetMap) des lieux visités, à partir
+  des coordonnées GPS renseignées sur les récits — onglet Carte.
 
 ## Ce qu'il reste à faire
 
-- **Jalons automatiques sur la Timeline**, **export album souvenir**,
-  **onglet Coréen** : explicitement hors scope V1, voir le cahier des
-  charges.
+- **Export album souvenir**, **onglet Coréen** : explicitement hors scope
+  V1, voir le cahier des charges.
 - Rien n'a pu être testé dans un vrai navigateur pendant l'écriture de ce
   code (pas d'environnement disponible) — attends-toi à corriger deux ou
-  trois petits bugs à la première utilisation réelle.
+  trois petits bugs à la première utilisation réelle. C'est également vrai
+  pour la mise à jour Galerie/Jalons/Carte : vérifie-la en local avant de
+  déployer (voir plus haut pour lancer un petit serveur local).

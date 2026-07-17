@@ -4,7 +4,7 @@ import { escapeHtml } from './utils.js';
 export async function renderBandeauAdmin(container) {
   const { data } = await supabase
     .from('status_banner')
-    .select('city, status_note, music_title, music_url, note')
+    .select('city, status_note, music_title, music_url, note, depart_date')
     .eq('id', true)
     .maybeSingle();
 
@@ -33,6 +33,10 @@ export async function renderBandeauAdmin(container) {
         <label>Note courte</label>
         <input type="text" id="b-note" maxlength="140" value="${escapeHtml(b.note ?? '')}" />
       </div>
+      <div class="field">
+        <label>Date de départ (pour les jalons automatiques de la Timeline)</label>
+        <input type="date" id="b-depart-date" value="${escapeHtml(b.depart_date ?? '')}" />
+      </div>
       <button class="btn" id="b-save">Enregistrer</button>
       <span id="b-saved" style="display:none; margin-left:10px; font-size:12.5px; color:var(--celadon);">Enregistré.</span>
     </div>
@@ -45,6 +49,7 @@ export async function renderBandeauAdmin(container) {
       music_title: document.getElementById('b-music-title').value.trim() || null,
       music_url: document.getElementById('b-music-url').value.trim() || null,
       note: document.getElementById('b-note').value.trim() || null,
+      depart_date: document.getElementById('b-depart-date').value || null,
       updated_at: new Date().toISOString()
     };
     await supabase.from('status_banner').update(payload).eq('id', true);
