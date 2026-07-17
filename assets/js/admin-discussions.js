@@ -3,7 +3,11 @@ import { CIRCLES } from './circles.js';
 import { escapeHtml } from './utils.js';
 
 export async function countUnreadDiscussions() {
-  const { data } = await supabase.from('discussions').select('id, last_message_at, last_seen_by_moi_at').eq('last_message_is_moi', false);
+  const { data } = await supabase
+    .from('discussions')
+    .select('id, last_message_at, last_seen_by_moi_at')
+    .eq('last_message_is_moi', false)
+    .eq('archived', false);
   if (!data) return 0;
   return data.filter((d) => !d.last_seen_by_moi_at || d.last_message_at > d.last_seen_by_moi_at).length;
 }
@@ -16,10 +20,11 @@ export async function refreshDiscussionsBadge() {
   badge.style.display = count > 0 ? '' : 'none';
 }
 
-export async function renderDiscussionsAdmin(container) {
+export async function renderDiscussionsAdmin(container, showArchived = false) {
   const { data, error } = await supabase
     .from('discussions')
     .select('*, discussion_messages(*)')
+    .eq('archived', showArchived)
     .order('last_message_at', { ascending: false });
 
   if (error) {
@@ -30,16 +35,21 @@ export async function renderDiscussionsAdmin(container) {
   const discussions = data || [];
 
   container.innerHTML = `
-    <p style="font-family:var(--font-serif); font-size:24px; font-weight:600; margin:0 0 18px;">Discussions</p>
+    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:18px;">
+      <p style="font-family:var(--font-serif); font-size:24px; font-weight:600; margin:0;">${showArchived ? 'Discussions archivées' : 'Discussions'}</p>
+      <button class="btn-link" id="toggle-archived-btn">${showArchived ? '← Discussions actives' : 'Voir les archivées'}</button>
+    </div>
     ${
       discussions.length === 0
-        ? `<p class="hint-text">Aucune discussion pour l'instant.</p>`
+        ? `<p class="hint-text">${showArchived ? 'Aucune discussion archivée.' : "Aucune discussion pour l'instant."}</p>`
         : `<div class="adm-list">${discussions.map((d) => threadRowHtml(d)).join('')}</div>`
     }
   `;
 
+  container.querySelector('#toggle-archived-btn').addEventListener('click', () => renderDiscussionsAdmin(container, !showArchived));
+
   container.querySelectorAll('[data-thread-open]').forEach((el) => {
-    el.addEventListener('click', () => renderThreadDetailAdmin(container, el.dataset.threadOpen));
+    el.addEventListener('click', () => renderThreadDetailAdmin(container, el.dataset.threadOpen, showArchived));
   });
 
   await refreshDiscussionsBadge();
@@ -63,7 +73,7 @@ function threadRowHtml(d) {
   `;
 }
 
-async function renderThreadDetailAdmin(container, discussionId) {
+async function renderThreadDetailAdmin(container, discussionId, showArchived = false) {
   await supabase.from('discussions').update({ last_seen_by_moi_at: new Date().toISOString() }).eq('id', discussionId);
 
   const { data: discussion } = await supabase.from('discussions').select('*').eq('id', discussionId).maybeSingle();
@@ -76,7 +86,7 @@ async function renderThreadDetailAdmin(container, discussionId) {
   await refreshDiscussionsBadge();
 
   if (!discussion) {
-    renderDiscussionsAdmin(container);
+    renderDiscussionsAdmin(container, showArchived);
     return;
   }
 
@@ -114,10 +124,15 @@ async function renderThreadDetailAdmin(container, discussionId) {
         <textarea id="thread-reply-body" placeholder="Ta réponse..."></textarea>
         <button class="btn-link" id="thread-reply-submit">Envoyer</button>
       </div>
+
+      <div style="display:flex; gap:10px; margin-top:20px; border-top:1px solid var(--line); padding-top:16px;">
+        <button class="btn btn-ghost" id="thread-archive-btn">${discussion.archived ? 'Désarchiver' : 'Archiver'}</button>
+        <button class="btn btn-danger" id="thread-delete-btn">Supprimer</button>
+      </div>
     </div>
   `;
 
-  container.querySelector('#thread-back-btn').addEventListener('click', () => renderDiscussionsAdmin(container));
+  container.querySelector('#thread-back-btn').addEventListener('click', () => renderDiscussionsAdmin(container, showArchived));
 
   container.querySelector('#thread-title-save').addEventListener('click', async () => {
     const title = document.getElementById('thread-title-input').value.trim();
@@ -133,6 +148,17 @@ async function renderThreadDetailAdmin(container, discussionId) {
     const body = bodyInput.value.trim();
     if (!body) return;
     await supabase.from('discussion_messages').insert({ discussion_id: discussionId, author_name: 'Léona', body, is_moi: true });
-    renderThreadDetailAdmin(container, discussionId);
+    renderThreadDetailAdmin(container, discussionId, showArchived);
+  });
+
+  container.querySelector('#thread-archive-btn').addEventListener('click', async () => {
+    await supabase.from('discussions').update({ archived: !discussion.archived }).eq('id', discussionId);
+    renderDiscussionsAdmin(container, showArchived);
+  });
+
+  container.querySelector('#thread-delete-btn').addEventListener('click', async () => {
+    if (!confirm('Supprimer cette discussion et tous ses messages, définitivement ?')) return;
+    await supabase.from('discussions').delete().eq('id', discussionId);
+    renderDiscussionsAdmin(container, showArchived);
   });
 }

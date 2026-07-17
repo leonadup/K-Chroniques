@@ -346,3 +346,14 @@ drop trigger if exists discussion_messages_touch_parent on discussion_messages;
 create trigger discussion_messages_touch_parent
   after insert on discussion_messages
   for each row execute function touch_discussion_on_new_message();
+
+-- ---------------------------------------------------------------------------
+-- Migration 004 — un fil de discussion peut être archivé ou supprimé
+-- (voir supabase/migrations/004_discussions_archive.sql)
+-- ---------------------------------------------------------------------------
+alter table discussions add column if not exists archived boolean not null default false;
+
+create policy "discussions supprimables par Moi" on discussions
+  for delete using (auth.role() = 'authenticated');
+create policy "messages supprimables par Moi (suppression du fil)" on discussion_messages
+  for delete using (auth.role() = 'authenticated');

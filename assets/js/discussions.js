@@ -15,6 +15,7 @@ async function loadDiscussions() {
     .from('discussions')
     .select('*, discussion_messages(*)')
     .eq('circle_id', circleId)
+    .eq('archived', false)
     .order('last_message_at', { ascending: false });
 
   discussions = error || !data ? [] : data;
