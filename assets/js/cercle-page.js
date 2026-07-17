@@ -4,6 +4,7 @@ import { applySeason } from './season.js';
 import { CIRCLES, canViewEntry, canViewPhoto } from './circles.js';
 import { escapeHtml, fmtEuros } from './utils.js';
 import { REACTION_PALETTE } from './reactions.js';
+import { setupDiscussionsBox } from './discussions.js';
 
 applySeason();
 
@@ -12,7 +13,6 @@ let allEntries = [];
 let departDate = null;
 let leafletMap = null;
 let leafletMarkersLayer = null;
-let answeredQuestionIds = [];
 
 const MILESTONE_THRESHOLDS = [
   { days: 7, label: '1 semaine sur place' },
@@ -36,7 +36,7 @@ async function init() {
   }
 
   setupTabs();
-  setupQuestionBox();
+  setupDiscussionsBox(circleId);
   await loadBandeau();
   await loadEntries();
 }
@@ -46,12 +46,11 @@ function setupTabs() {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.fds-tab').forEach((t) => t.classList.remove('active'));
       tab.classList.add('active');
-      ['timeline', 'recits', 'galerie', 'carte', 'lettres', 'questions'].forEach((name) => {
+      ['timeline', 'recits', 'galerie', 'carte', 'lettres', 'discussions'].forEach((name) => {
         const panel = document.getElementById('panel-' + name);
         if (panel) panel.style.display = name === tab.dataset.tab ? '' : 'none';
       });
       if (tab.dataset.tab === 'carte') initOrRefreshMap();
-      if (tab.dataset.tab === 'questions') markQuestionsSeen();
     });
   });
 }
@@ -360,8 +359,10 @@ function commentThreadHtml(entry) {
           .map(
             (c) => `
           <div class="fds-comment">
-            <b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}
-            ${mine.has(c.id) ? `<button class="mf-del" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">✕</button>` : ''}
+            <div class="fds-comment-row">
+              <span><b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}</span>
+              ${mine.has(c.id) ? `<button class="fds-comment-delete" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">✕</button>` : ''}
+            </div>
             ${c.reply_text ? `<div class="fds-question-reply">${escapeHtml(c.reply_text)}</div>` : ''}
           </div>
         `
@@ -382,7 +383,7 @@ function wireEntryCards(container) {
     btn.addEventListener('click', () => toggleReaction(btn.dataset.reaction, btn.dataset.emoji));
   });
   container.querySelectorAll('[data-comment-submit]').forEach((btn) => {
-    btn.addEventListener('click', () => submitComment(btn.dataset.commentSubmit));
+    btn.addEventListener('click', () => submitComment(btn));
   });
   container.querySelectorAll('[data-comment-delete]').forEach((btn) => {
     btn.addEventListener('click', () => deleteComment(btn.dataset.commentDeleteEntry, btn.dataset.commentDelete));
@@ -405,11 +406,16 @@ async function toggleReaction(entryId, emoji) {
   refreshEntryCard(entry);
 }
 
-async function submitComment(entryId) {
+async function submitComment(btn) {
+  const entryId = btn.dataset.commentSubmit;
   const entry = allEntries.find((e) => e.id === entryId);
   if (!entry) return;
-  const authorInput = document.querySelector(`[data-comment-author="${entryId}"]`);
-  const bodyInput = document.querySelector(`[data-comment-body="${entryId}"]`);
+  // Scoped au formulaire du bouton cliqué : la même entrée peut être rendue
+  // deux fois en même temps (liste + modale), document.querySelector
+  // prendrait toujours la première occurrence dans le DOM sinon.
+  const form = btn.closest('.fds-comment-form');
+  const authorInput = form.querySelector('[data-comment-author]');
+  const bodyInput = form.querySelector('[data-comment-body]');
   const author = authorInput.value.trim();
   const body = bodyInput.value.trim();
   if (!author || !body) return;
@@ -464,86 +470,3 @@ function openEntryModal(entryId) {
   });
 }
 
-async function setupQuestionBox() {
-  const box = document.getElementById('question-box');
-  box.innerHTML = `
-    <div class="fds-question-panel">
-      <p class="fds-question-title">Questions & réponses</p>
-      <div id="question-history"></div>
-      <p class="fds-question-title" style="margin-top:18px;">Une question ?</p>
-      <p class="hint-text" style="margin-bottom:12px;">Elle trouvera sa réponse ici ou dans une prochaine entrée.</p>
-      <div class="fds-comment-form">
-        <input type="text" placeholder="Ton prénom (optionnel)" maxlength="40" id="question-author" />
-        <textarea placeholder="Ta question..." maxlength="500" id="question-text"></textarea>
-        <button class="btn btn-ghost" id="question-submit">Envoyer</button>
-      </div>
-      <p class="hint-text" id="question-sent" style="display:none; margin-top:8px;">Question envoyée, merci !</p>
-    </div>
-  `;
-
-  await loadQuestionHistory();
-
-  document.getElementById('question-submit').addEventListener('click', async () => {
-    const author = document.getElementById('question-author').value.trim();
-    const text = document.getElementById('question-text').value.trim();
-    if (!text) return;
-    const { error } = await supabase.from('questions').insert({ circle_id: circleId, author_name: author || null, question_text: text });
-    if (!error) {
-      document.getElementById('question-text').value = '';
-      document.getElementById('question-sent').style.display = 'block';
-    }
-  });
-}
-
-async function loadQuestionHistory() {
-  const historyEl = document.getElementById('question-history');
-  const { data, error } = await supabase
-    .from('questions')
-    .select('id, circle_id, author_name, question_text, reply_text, created_at')
-    .eq('circle_id', circleId)
-    .not('reply_text', 'is', null)
-    .order('created_at', { ascending: false });
-
-  if (error || !data || data.length === 0) {
-    historyEl.innerHTML = `<p class="hint-text">Pas encore de question répondue ici.</p>`;
-    answeredQuestionIds = [];
-    updateQuestionsBadge();
-    return;
-  }
-
-  historyEl.innerHTML = data
-    .map(
-      (q) => `
-      <div class="fds-comment">
-        <b>${q.author_name ? escapeHtml(q.author_name) : 'Anonyme'}</b> — ${escapeHtml(q.question_text)}
-        <div class="fds-question-reply">${escapeHtml(q.reply_text)}</div>
-      </div>
-    `
-    )
-    .join('');
-
-  answeredQuestionIds = data.map((q) => q.id);
-  updateQuestionsBadge();
-}
-
-function getSeenQuestionIds() {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(`fds_questions_seen_${circleId}`) || '[]'));
-  } catch {
-    return new Set();
-  }
-}
-
-function updateQuestionsBadge() {
-  const badge = document.getElementById('questions-badge');
-  if (!badge) return;
-  const seen = getSeenQuestionIds();
-  const unseenCount = answeredQuestionIds.filter((id) => !seen.has(id)).length;
-  badge.textContent = unseenCount;
-  badge.style.display = unseenCount > 0 ? '' : 'none';
-}
-
-function markQuestionsSeen() {
-  localStorage.setItem(`fds_questions_seen_${circleId}`, JSON.stringify(answeredQuestionIds));
-  updateQuestionsBadge();
-}

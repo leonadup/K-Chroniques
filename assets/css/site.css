@@ -182,6 +182,9 @@
 .fds-comments-label { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin: 0 0 10px; }
 .fds-comment { font-size: 13.5px; margin-bottom: 8px; padding-left: 10px; border-left: 2px solid var(--paper-deep); }
 .fds-comment b { color: var(--ink); }
+.fds-comment-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
+.fds-comment-delete { background: none; border: none; color: var(--ink-soft); cursor: pointer; font-size: 13px; padding: 0 2px; flex-shrink: 0; }
+.fds-comment-delete:hover { color: var(--red); }
 .fds-question-reply { margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--persimmon); color: var(--ink-soft); }
 .fds-comment-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .fds-comment-form input, .fds-comment-form textarea {
@@ -192,6 +195,25 @@
 
 .fds-question-panel { background: var(--white); border: 1px solid var(--line); border-radius: 4px; padding: 18px 20px; }
 .fds-question-title { font-family: var(--font-serif); font-size: 17px; font-weight: 600; margin: 0 0 6px; }
+
+.fds-thread-list { display: flex; flex-direction: column; gap: 8px; }
+.fds-thread-card { background: var(--paper); border: 1px solid var(--line); border-radius: 4px; padding: 12px 14px; cursor: pointer; }
+.fds-thread-card:hover { border-color: var(--season-accent); }
+.fds-thread-card-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.fds-thread-card-title { font-family: var(--font-serif); font-size: 15px; font-weight: 600; }
+.fds-thread-card-preview { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0; }
+.fds-thread-card-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
+.fds-thread-unseen-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+
+.fds-thread-back { margin-bottom: 14px; }
+.fds-thread-messages { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; margin: 14px 0; }
+.fds-thread-message { border-left: 3px solid var(--celadon); padding: 4px 0 4px 10px; }
+.fds-thread-message.moi { border-left-color: var(--persimmon); }
+.fds-thread-message-top { display: flex; justify-content: space-between; gap: 10px; }
+.fds-thread-message-author { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+.fds-thread-message.moi .fds-thread-message-author { color: var(--persimmon); }
+.fds-thread-message-date { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); }
+.fds-thread-message-body { font-size: 13.5px; margin: 3px 0 0; white-space: pre-wrap; }
 
 .fds-timeline-milestone {
   display: flex;
@@ -220,6 +242,11 @@
 
 .fds-feed-carte { padding-top: 12px; }
 .fds-map { width: 100%; height: 480px; border-radius: 6px; border: 1px solid var(--line); }
+/* La règle globale `img { max-width: 100% }` (tokens.css) casse le
+   positionnement des tuiles Leaflet (des <img> en 256x256 absolus) : elle
+   les fait rétrécir à la taille de leur conteneur, désalignant toute la
+   carte et donnant l'impression que les marqueurs sont au mauvais endroit. */
+.leaflet-container img { max-width: none; }
 .fds-map-marker span {
   display: block;
   width: 16px;
@@ -320,6 +347,22 @@
 
 .adm-photo-row { display: flex; gap: 10px; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--paper-deep); font-size: 13px; }
 .adm-photo-path { flex: 1; font-family: var(--font-mono); font-size: 11.5px; color: var(--ink-soft); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.adm-unread-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--red); margin-left: 6px; vertical-align: middle; }
+
+.adm-title-edit { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+.adm-title-edit input {
+  flex: 1 1 240px; font-family: var(--font-sans); font-size: 14px; padding: 8px 10px; border: 1px solid var(--line); border-radius: 4px; background: var(--paper);
+}
+
+.adm-thread-messages { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; margin-bottom: 14px; }
+.adm-thread-message { border-left: 3px solid var(--celadon); padding: 4px 0 4px 10px; }
+.adm-thread-message.moi { border-left-color: var(--persimmon); }
+.adm-thread-message-top { display: flex; justify-content: space-between; gap: 10px; }
+.adm-thread-message-author { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-soft); }
+.adm-thread-message.moi .adm-thread-message-author { color: var(--persimmon); }
+.adm-thread-message-date { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); }
+.adm-thread-message-body { font-size: 13.5px; margin: 3px 0 0; white-space: pre-wrap; }
 
 .adm-login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .adm-login-card { background: var(--white); border: 1px solid var(--line); border-radius: 6px; padding: 28px 26px; width: 100%; max-width: 360px; }

@@ -3,7 +3,7 @@ import { applySeason } from './season.js';
 import { initFinances } from './finances.js';
 import { renderEntryList } from './admin-entries.js';
 import { renderBandeauAdmin } from './admin-bandeau.js';
-import { renderQuestionsAdmin, refreshQuestionsBadge } from './admin-questions.js';
+import { renderDiscussionsAdmin, refreshDiscussionsBadge } from './admin-discussions.js';
 
 applySeason();
 
@@ -50,12 +50,12 @@ function showAdmin() {
   });
 
   switchTab('finances');
-  refreshQuestionsBadge();
+  refreshDiscussionsBadge();
 }
 
 function switchTab(name) {
   document.querySelectorAll('.adm-tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
-  ['finances', 'recits', 'lettres', 'bandeau', 'questions'].forEach((n) => {
+  ['finances', 'recits', 'lettres', 'bandeau', 'discussions'].forEach((n) => {
     document.getElementById('panel-' + n).style.display = n === name ? '' : 'none';
   });
 
@@ -67,7 +67,7 @@ function switchTab(name) {
   if (name === 'recits') renderEntryList(panel, 'recit');
   if (name === 'lettres') renderEntryList(panel, 'lettre');
   if (name === 'bandeau') renderBandeauAdmin(panel);
-  if (name === 'questions') renderQuestionsAdmin(panel);
+  if (name === 'discussions') renderDiscussionsAdmin(panel);
 }
 
 boot();
