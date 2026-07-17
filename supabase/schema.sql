@@ -286,3 +286,9 @@ alter table status_banner add column if not exists depart_date date;
 
 alter table entries add column if not exists lat numeric;
 alter table entries add column if not exists lng numeric;
+
+-- ---------------------------------------------------------------------------
+-- Migration 002 — un commentaire peut être supprimé par son auteur
+-- (voir supabase/migrations/002_suppression_commentaires.sql)
+-- ---------------------------------------------------------------------------
+create policy "commentaires supprimables par tous (auteur)" on comments for delete using (true);

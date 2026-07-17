@@ -231,19 +231,25 @@ function renderGalerie() {
 }
 
 function initOrRefreshMap() {
-  if (!leafletMap) {
+  const firstInit = !leafletMap;
+  if (firstInit) {
     leafletMap = L.map('carte-map', { scrollWheelZoom: false }).setView([36.5, 127.8], 7);
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
       attribution: '&copy; OpenStreetMap contributors'
     }).addTo(leafletMap);
     leafletMarkersLayer = L.layerGroup().addTo(leafletMap);
-    renderMapMarkers();
   }
   // Le conteneur est caché via display:none jusqu'à la première ouverture de
-  // l'onglet : Leaflet mesure alors une taille de 0x0. invalidateSize() force
-  // le recalcul une fois le panneau visible (le setTimeout laisse le
-  // navigateur appliquer le display avant la mesure).
-  setTimeout(() => leafletMap && leafletMap.invalidateSize(), 0);
+  // l'onglet : Leaflet mesure alors une taille de 0x0 à l'initialisation. Il
+  // faut appeler invalidateSize() une fois le panneau visible (le setTimeout
+  // laisse le navigateur appliquer le display avant la mesure) AVANT de
+  // placer les marqueurs, sinon fitBounds() calcule leur position à partir
+  // d'un conteneur de taille nulle et ils s'affichent au mauvais endroit.
+  setTimeout(() => {
+    if (!leafletMap) return;
+    leafletMap.invalidateSize();
+    if (firstInit) renderMapMarkers();
+  }, 0);
 }
 
 function renderMapMarkers() {
@@ -329,8 +335,23 @@ function reactionBarHtml(entry) {
   `;
 }
 
+function getMyCommentIds() {
+  try {
+    return new Set(JSON.parse(localStorage.getItem('fds_my_comments') || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function addMyCommentId(id) {
+  const mine = getMyCommentIds();
+  mine.add(id);
+  localStorage.setItem('fds_my_comments', JSON.stringify([...mine]));
+}
+
 function commentThreadHtml(entry) {
   const comments = [...(entry.comments || [])].sort((a, b) => (a.created_at < b.created_at ? -1 : 1));
+  const mine = getMyCommentIds();
   return `
     <div class="fds-comments">
       <p class="fds-comments-label">${comments.length} commentaire${comments.length !== 1 ? 's' : ''}</p>
@@ -340,6 +361,7 @@ function commentThreadHtml(entry) {
             (c) => `
           <div class="fds-comment">
             <b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}
+            ${mine.has(c.id) ? `<button class="mf-del" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">✕</button>` : ''}
             ${c.reply_text ? `<div class="fds-question-reply">${escapeHtml(c.reply_text)}</div>` : ''}
           </div>
         `
@@ -361,6 +383,9 @@ function wireEntryCards(container) {
   });
   container.querySelectorAll('[data-comment-submit]').forEach((btn) => {
     btn.addEventListener('click', () => submitComment(btn.dataset.commentSubmit));
+  });
+  container.querySelectorAll('[data-comment-delete]').forEach((btn) => {
+    btn.addEventListener('click', () => deleteComment(btn.dataset.commentDeleteEntry, btn.dataset.commentDelete));
   });
 }
 
@@ -397,6 +422,18 @@ async function submitComment(entryId) {
 
   if (!error && data) {
     entry.comments = [...(entry.comments || []), data];
+    addMyCommentId(data.id);
+    refreshEntryCard(entry);
+  }
+}
+
+async function deleteComment(entryId, commentId) {
+  const entry = allEntries.find((e) => e.id === entryId);
+  if (!entry) return;
+  if (!confirm('Supprimer ton commentaire ?')) return;
+  const { error } = await supabase.from('comments').delete().eq('id', commentId);
+  if (!error) {
+    entry.comments = (entry.comments || []).filter((c) => c.id !== commentId);
     refreshEntryCard(entry);
   }
 }
