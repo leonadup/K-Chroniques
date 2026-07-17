@@ -336,7 +336,7 @@ function reactionBarHtml(entry) {
 
 function getMyCommentIds() {
   try {
-    return new Set(JSON.parse(localStorage.getItem('fds_my_comments') || '[]'));
+    return new Set(JSON.parse(localStorage.getItem(`fds_my_comments_${circleId}`) || '[]'));
   } catch {
     return new Set();
   }
@@ -345,7 +345,7 @@ function getMyCommentIds() {
 function addMyCommentId(id) {
   const mine = getMyCommentIds();
   mine.add(id);
-  localStorage.setItem('fds_my_comments', JSON.stringify([...mine]));
+  localStorage.setItem(`fds_my_comments_${circleId}`, JSON.stringify([...mine]));
 }
 
 function commentThreadHtml(entry) {
@@ -361,7 +361,7 @@ function commentThreadHtml(entry) {
           <div class="fds-comment">
             <div class="fds-comment-row">
               <span><b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}</span>
-              ${mine.has(c.id) ? `<button class="fds-comment-delete" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">✕</button>` : ''}
+              ${mine.has(c.id) && c.circle_id === circleId ? `<button class="fds-comment-delete" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">✕</button>` : ''}
             </div>
             ${c.reply_text ? `<div class="fds-question-reply">${escapeHtml(c.reply_text)}</div>` : ''}
           </div>
