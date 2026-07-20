@@ -366,3 +366,69 @@
 
 .adm-login-wrap { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 24px; }
 .adm-login-card { background: var(--white); border: 1px solid var(--line); border-radius: 6px; padding: 28px 26px; width: 100%; max-width: 360px; }
+
+/* ==========================================================================
+   Moi · Coréen (apprentissage personnel, répétition espacée)
+   ========================================================================== */
+.kr-stats-bar { display: flex; gap: 14px; margin-bottom: 20px; flex-wrap: wrap; }
+.kr-stat { background: var(--white); border: 1px solid var(--line); border-radius: 5px; padding: 12px 20px; flex: 1 1 120px; text-align: center; }
+.kr-stat-value { display: block; font-family: var(--font-serif); font-size: 22px; font-weight: 600; }
+.kr-stat-label { display: block; font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin-top: 2px; }
+
+.kr-daily-btn { width: 100%; padding: 14px; font-size: 14px; margin-bottom: 24px; }
+
+.kr-units-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.kr-unit-card { background: var(--white); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; cursor: pointer; }
+.kr-unit-card:hover { border-color: var(--persimmon); }
+.kr-unit-icon { font-size: 22px; }
+.kr-unit-title { font-family: var(--font-serif); font-size: 15.5px; font-weight: 600; margin: 6px 0 10px; }
+.kr-unit-bar-track { background: var(--paper-deep); border-radius: 20px; height: 8px; overflow: hidden; }
+.kr-unit-bar-fill { height: 100%; background: var(--celadon); border-radius: 20px; }
+.kr-unit-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); margin: 8px 0 0; }
+.kr-unit-due { color: var(--persimmon); }
+
+.kr-add-word { margin-top: 10px; }
+.kr-add-word summary { cursor: pointer; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--persimmon); }
+
+.kr-practice { max-width: 480px; margin: 0 auto; }
+.kr-session-top { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; }
+.kr-session-bar-track { flex: 1; background: var(--paper-deep); border-radius: 20px; height: 8px; overflow: hidden; }
+.kr-session-bar-fill { height: 100%; background: var(--persimmon); border-radius: 20px; transition: width 0.2s ease; }
+.kr-session-count { font-family: var(--font-mono); font-size: 11px; color: var(--ink-soft); white-space: nowrap; }
+
+.kr-card { background: var(--white); border: 1px solid var(--line); border-radius: 8px; padding: 28px 24px; text-align: center; }
+.kr-card-label { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin: 0 0 14px; }
+.kr-korean-row { display: flex; align-items: center; justify-content: center; gap: 10px; }
+.kr-korean-big { font-family: var(--font-serif); font-size: 42px; font-weight: 600; margin: 0; }
+.kr-romanization { font-family: var(--font-mono); font-size: 13px; color: var(--ink-soft); margin: 6px 0 0; }
+.kr-french-big { font-family: var(--font-serif); font-size: 24px; font-weight: 600; margin: 0; }
+.kr-note { font-size: 12.5px; color: var(--ink-soft); font-style: italic; margin: 10px 0 0; }
+
+.kr-listen-btn { background: var(--paper); border: 1px solid var(--line); border-radius: 50%; width: 38px; height: 38px; font-size: 16px; cursor: pointer; }
+.kr-listen-btn:hover { border-color: var(--persimmon); }
+.kr-listen-btn-big { border-radius: 20px; width: auto; padding: 10px 20px; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+
+.kr-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
+.kr-option-btn {
+  font-family: var(--font-sans); font-size: 14.5px; background: var(--paper); border: 1px solid var(--line);
+  border-radius: 5px; padding: 12px 10px; cursor: pointer;
+}
+.kr-option-btn:hover { border-color: var(--persimmon); }
+.kr-option-btn.correct { border-color: var(--celadon); background: color-mix(in srgb, var(--celadon) 18%, var(--white)); }
+.kr-option-btn.disabled { opacity: 0.45; cursor: default; }
+
+.kr-type-input {
+  width: 100%; font-family: var(--font-mono); font-size: 16px; text-align: center; padding: 12px; margin-top: 16px;
+  border: 1px solid var(--line); border-radius: 5px; background: var(--paper);
+}
+
+.kr-feedback { font-family: var(--font-mono); font-size: 12.5px; margin: 16px 0 0; }
+.kr-feedback.correct { color: var(--celadon); }
+.kr-feedback.wrong { color: var(--red); }
+
+.kr-continue-btn { margin-top: 18px; width: 100%; }
+
+.kr-summary { max-width: 420px; margin: 60px auto; text-align: center; }
+.kr-summary-emoji { font-size: 48px; margin: 0; }
+.kr-summary-title { font-family: var(--font-serif); font-size: 24px; font-weight: 600; margin: 8px 0 24px; }
+.kr-summary-stats { display: flex; gap: 12px; margin-bottom: 28px; }

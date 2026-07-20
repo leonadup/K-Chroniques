@@ -4,6 +4,7 @@ import { initFinances } from './finances.js';
 import { renderEntryList } from './admin-entries.js';
 import { renderBandeauAdmin } from './admin-bandeau.js';
 import { renderDiscussionsAdmin, refreshDiscussionsBadge } from './admin-discussions.js';
+import { renderCoreenTab } from './coreen.js';
 
 applySeason();
 
@@ -55,7 +56,7 @@ function showAdmin() {
 
 function switchTab(name) {
   document.querySelectorAll('.adm-tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
-  ['finances', 'recits', 'lettres', 'bandeau', 'discussions'].forEach((n) => {
+  ['finances', 'recits', 'lettres', 'bandeau', 'discussions', 'coreen'].forEach((n) => {
     document.getElementById('panel-' + n).style.display = n === name ? '' : 'none';
   });
 
@@ -68,6 +69,7 @@ function switchTab(name) {
   if (name === 'lettres') renderEntryList(panel, 'lettre');
   if (name === 'bandeau') renderBandeauAdmin(panel);
   if (name === 'discussions') renderDiscussionsAdmin(panel);
+  if (name === 'coreen') renderCoreenTab(panel);
 }
 
 boot();

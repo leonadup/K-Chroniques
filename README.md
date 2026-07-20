@@ -127,6 +127,13 @@ nécessaire.
 - **Site installable + notifications push** — icône sur l'écran d'accueil
   (Android et iPhone) et notification à chaque récit/lettre publié. Voir la
   section dédiée ci-dessous pour la mise en place (une seule fois).
+- **Onglet Coréen** (`moi.html` uniquement, jamais visible des cercles) —
+  apprentissage du coréen façon Duolingo : unités (Hangul, salutations,
+  nombres, nourriture...), répétition espacée (Leitner), QCM/frappe/écoute
+  (synthèse vocale native du navigateur), XP et streak. Contenu de départ
+  d'une centaine de mots/phrases, extensible depuis l'onglet lui-même
+  ("+ Ajouter un mot"). Rien à configurer en plus du reste : la migration
+  `006_coreen.sql` (déjà incluse dans `schema.sql`) suffit.
 
 ## Notifications push (site installable façon appli)
 
@@ -195,8 +202,8 @@ récit), voir la note de sécurité en haut de `supabase/schema.sql`.
 
 ## Ce qu'il reste à faire
 
-- **Export album souvenir**, **onglet Coréen** : explicitement hors scope
-  V1, voir le cahier des charges.
+- **Export album souvenir** : explicitement hors scope V1, voir le cahier
+  des charges.
 - Rien n'a pu être testé dans un vrai navigateur pendant l'écriture de ce
   code (pas d'environnement disponible) — attends-toi à corriger deux ou
   trois petits bugs à la première utilisation réelle. C'est également vrai
