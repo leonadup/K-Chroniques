@@ -1,0 +1,30 @@
+name: Rappel checklist PVT quotidien
+
+# Vérifie une fois par jour si des points de la Checklist (moi.html) sont
+# non cochés depuis trop longtemps, et envoie une notification push si oui.
+# Voir supabase/functions/checklist-reminder et le README (section
+# Notifications push) pour la mise en place complète.
+
+on:
+  schedule:
+    - cron: '0 8 * * *' # tous les jours à 8h UTC (17h en Corée, 9-10h en France)
+  workflow_dispatch: {} # bouton "Run workflow" manuel dans l'onglet Actions
+
+jobs:
+  remind:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Appeler l'Edge Function checklist-reminder
+        run: |
+          curl --fail --silent --show-error \
+            -X POST "$SUPABASE_URL/functions/v1/checklist-reminder" \
+            -H "apikey: $SUPABASE_ANON_KEY" \
+            -H "Authorization: Bearer $SUPABASE_ANON_KEY"
+        env:
+          # Mêmes valeurs que dans assets/js/config.js (la clé "anon" est
+          # publique par design chez Supabase, pas besoin d'un secret GitHub).
+          # La fonction elle-même est déployée avec --no-verify-jwt (voir
+          # README) : ces headers ne servent qu'à passer la passerelle
+          # Supabase, pas à s'authentifier en tant qu'utilisatrice.
+          SUPABASE_URL: https://iglwwrfhfvzxifjbyusa.supabase.co
+          SUPABASE_ANON_KEY: sb_publishable_OWoN-xq1Z_wnCl8dQx_0qQ_C_E0LQ0k

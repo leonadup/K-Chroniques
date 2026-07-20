@@ -432,3 +432,15 @@
 .kr-summary-emoji { font-size: 48px; margin: 0; }
 .kr-summary-title { font-family: var(--font-serif); font-size: 24px; font-weight: 600; margin: 8px 0 24px; }
 .kr-summary-stats { display: flex; gap: 12px; margin-bottom: 28px; }
+
+/* ==========================================================================
+   Moi · Journal (humeur)
+   ========================================================================== */
+.jr-mood-picker { display: flex; gap: 8px; }
+.jr-mood-btn {
+  font-size: 22px; background: var(--paper); border: 1px solid var(--line); border-radius: 8px;
+  padding: 6px 10px; cursor: pointer; line-height: 1;
+}
+.jr-mood-btn.active { border-color: var(--persimmon); background: var(--season-accent-soft); }
+.jr-mood-strip { display: flex; gap: 4px; align-items: flex-end; margin-bottom: 20px; padding: 10px 14px; background: var(--white); border: 1px solid var(--line); border-radius: 5px; overflow-x: auto; }
+.jr-mood-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }

@@ -134,6 +134,14 @@ nécessaire.
   d'une centaine de mots/phrases, extensible depuis l'onglet lui-même
   ("+ Ajouter un mot"). Rien à configurer en plus du reste : la migration
   `006_coreen.sql` (déjà incluse dans `schema.sql`) suffit.
+- **Espace perso** (`moi.html` uniquement, jamais visible des cercles) :
+  **Journal** intime privé avec suivi d'humeur, **Checklist PVT** (visa,
+  ARC, ouverture de compte...) avec rappel push automatique si un point
+  traîne plus de 10 jours, **Fiche d'urgence** (contacts, assurance,
+  numéros coréens), **Envies** (lieux/restos à ne pas oublier, avec carte),
+  **Bloc-notes** rapide. Contenu créé par la migration `007_espace_perso.sql`
+  (déjà incluse dans `schema.sql`). Le rappel de checklist réutilise les
+  notifications push — voir la sous-section dédiée ci-dessous.
 
 ## Notifications push (site installable façon appli)
 
@@ -199,6 +207,26 @@ volontairement légère (`--no-verify-jwt`) : quelqu'un qui connaîtrait son
 URL pourrait en théorie déclencher un envoi de notif. Accepté sciemment vu
 le contexte : aucune donnée sensible n'y transite (juste un titre de
 récit), voir la note de sécurité en haut de `supabase/schema.sql`.
+
+### 6. (Optionnel) Rappels de checklist
+
+La Checklist PVT (`moi.html` → onglet Checklist) peut te notifier
+elle-même quand un point traîne depuis plus de 10 jours sans être coché.
+Ça réutilise tout ce qui précède (mêmes clés VAPID), avec juste deux ajouts :
+
+```
+supabase functions deploy checklist-reminder --no-verify-jwt
+```
+
+Puis active les notifications depuis `moi.html` elle-même (bouton
+"🔕 Activer les notifs" en haut, à côté de "Se déconnecter") — c'est
+indépendant de l'activation faite depuis `cercle.html`, il faut le faire
+une fois sur ton propre téléphone/ordinateur.
+
+Le workflow `.github/workflows/checklist-reminder.yml` (déjà dans le repo,
+rien à faire) appelle cette fonction une fois par jour à 8h UTC — dès que
+ce fichier est sur GitHub, l'exécution est automatique, comme pour le ping
+Supabase quotidien.
 
 ## Ce qu'il reste à faire
 

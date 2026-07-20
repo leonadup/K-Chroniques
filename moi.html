@@ -12,6 +12,8 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="assets/css/tokens.css" />
   <link rel="stylesheet" href="assets/css/site.css" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+        integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
 </head>
 <body>
   <div id="login-wrap" class="adm-login-wrap">
@@ -37,7 +39,10 @@
   <div id="adm-root" style="display: none">
     <div class="adm-header">
       <p class="adm-title">Moi</p>
-      <button class="fds-logout" id="moi-logout-btn">Se déconnecter</button>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <button class="fds-logout" id="notif-btn" style="display: none"></button>
+        <button class="fds-logout" id="moi-logout-btn">Se déconnecter</button>
+      </div>
     </div>
 
     <div class="adm-tabs">
@@ -47,6 +52,11 @@
       <button class="adm-tab" data-tab="bandeau">Bandeau</button>
       <button class="adm-tab" data-tab="discussions">Discussions <span class="adm-tab-badge" id="discussions-badge" style="display: none"></span></button>
       <button class="adm-tab" data-tab="coreen">Coréen</button>
+      <button class="adm-tab" data-tab="journal">Journal</button>
+      <button class="adm-tab" data-tab="checklist">Checklist</button>
+      <button class="adm-tab" data-tab="urgence">Urgence</button>
+      <button class="adm-tab" data-tab="envies">Envies</button>
+      <button class="adm-tab" data-tab="notes">Notes</button>
     </div>
 
     <div class="adm-panel-wrap">
@@ -56,9 +66,16 @@
       <div id="panel-bandeau" style="display: none"></div>
       <div id="panel-discussions" style="display: none"></div>
       <div id="panel-coreen" style="display: none"></div>
+      <div id="panel-journal" style="display: none"></div>
+      <div id="panel-checklist" style="display: none"></div>
+      <div id="panel-urgence" style="display: none"></div>
+      <div id="panel-envies" style="display: none"></div>
+      <div id="panel-notes" style="display: none"></div>
     </div>
   </div>
 
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+          integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="assets/js/moi-page.js"></script>
   <script>
     if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');

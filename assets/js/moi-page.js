@@ -5,6 +5,12 @@ import { renderEntryList } from './admin-entries.js';
 import { renderBandeauAdmin } from './admin-bandeau.js';
 import { renderDiscussionsAdmin, refreshDiscussionsBadge } from './admin-discussions.js';
 import { renderCoreenTab } from './coreen.js';
+import { renderJournal } from './journal.js';
+import { renderChecklist } from './checklist.js';
+import { renderEmergencyInfo } from './emergency-info.js';
+import { renderWishlist } from './wishlist.js';
+import { renderQuickNotes } from './quick-notes.js';
+import { pushSupportStatus, getExistingSubscription, enablePushNotifications, disablePushNotifications } from './push-notifications.js';
 
 applySeason();
 
@@ -52,11 +58,14 @@ function showAdmin() {
 
   switchTab('finances');
   refreshDiscussionsBadge();
+  setupNotifButton();
 }
+
+const TAB_NAMES = ['finances', 'recits', 'lettres', 'bandeau', 'discussions', 'coreen', 'journal', 'checklist', 'urgence', 'envies', 'notes'];
 
 function switchTab(name) {
   document.querySelectorAll('.adm-tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
-  ['finances', 'recits', 'lettres', 'bandeau', 'discussions', 'coreen'].forEach((n) => {
+  TAB_NAMES.forEach((n) => {
     document.getElementById('panel-' + n).style.display = n === name ? '' : 'none';
   });
 
@@ -70,6 +79,48 @@ function switchTab(name) {
   if (name === 'bandeau') renderBandeauAdmin(panel);
   if (name === 'discussions') renderDiscussionsAdmin(panel);
   if (name === 'coreen') renderCoreenTab(panel);
+  if (name === 'journal') renderJournal(panel);
+  if (name === 'checklist') renderChecklist(panel);
+  if (name === 'urgence') renderEmergencyInfo(panel);
+  if (name === 'envies') renderWishlist(panel);
+  if (name === 'notes') renderQuickNotes(panel);
+}
+
+async function setupNotifButton() {
+  const btn = document.getElementById('notif-btn');
+  const status = pushSupportStatus();
+  if (status === 'unsupported') return;
+
+  btn.style.display = '';
+  const subscription = status === 'ready' ? await getExistingSubscription() : null;
+  setNotifBtnLabel(btn, !!subscription);
+
+  btn.addEventListener('click', async () => {
+    if (pushSupportStatus() === 'needs-install') {
+      alert("Sur iPhone : ajoute d'abord ce site à l'écran d'accueil (Partager → Sur l'écran d'accueil) pour pouvoir activer les notifications.");
+      return;
+    }
+    const isEnabled = btn.dataset.enabled === 'true';
+    btn.disabled = true;
+    try {
+      if (isEnabled) {
+        await disablePushNotifications();
+        setNotifBtnLabel(btn, false);
+      } else {
+        await enablePushNotifications('moi');
+        setNotifBtnLabel(btn, true);
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Impossible d'activer les notifications.");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function setNotifBtnLabel(btn, enabled) {
+  btn.dataset.enabled = String(enabled);
+  btn.textContent = enabled ? '🔔 Notifs activées' : '🔕 Activer les notifs';
 }
 
 boot();
