@@ -124,6 +124,74 @@ nécessaire.
   à partir de la date de départ renseignée dans le Bandeau.
 - **Carte interactive** (Leaflet/OpenStreetMap) des lieux visités, à partir
   des coordonnées GPS renseignées sur les récits — onglet Carte.
+- **Site installable + notifications push** — icône sur l'écran d'accueil
+  (Android et iPhone) et notification à chaque récit/lettre publié. Voir la
+  section dédiée ci-dessous pour la mise en place (une seule fois).
+
+## Notifications push (site installable façon appli)
+
+Le site peut maintenant s'installer comme une vraie application (icône,
+notifications), grâce à `manifest.json` et `sw.js`. Ça demande une mise en
+place en plus des étapes précédentes, à faire une seule fois.
+
+### 1. Clés VAPID
+
+Une paire de clés a déjà été générée. La clé **publique** est déjà dans
+`assets/js/config.js` (`VAPID_PUBLIC_KEY`) — rien à faire. La clé **privée**
+t'a été donnée séparément (dans la conversation qui a mis ça en place) :
+garde-la précieusement, mais ne la mets JAMAIS dans un fichier du repo —
+uniquement dans les secrets Supabase (étape 3). Si tu la perds un jour,
+n'importe quel générateur de clés VAPID standard permet d'en recréer une
+nouvelle paire ; il faudra alors redemander à chacun de réactiver ses
+notifications.
+
+### 2. Déployer la fonction d'envoi
+
+Nécessite le [CLI Supabase](https://supabase.com/docs/guides/cli) (à
+installer une seule fois) :
+
+```
+supabase login
+supabase link --project-ref <ton-project-ref>
+supabase functions deploy send-push --no-verify-jwt
+```
+
+`--no-verify-jwt` est nécessaire car c'est Supabase lui-même (le Database
+Webhook, étape 4) qui appelle cette fonction, pas une personne connectée.
+
+### 3. Configurer les secrets de la fonction
+
+```
+supabase secrets set VAPID_PUBLIC_KEY="<la clé publique>" VAPID_PRIVATE_KEY="<la clé privée>"
+```
+
+(`SUPABASE_URL` et `SUPABASE_SERVICE_ROLE_KEY` sont fournies automatiquement
+à toute Edge Function, rien à configurer pour celles-ci.)
+
+### 4. Créer le Database Webhook
+
+Dans le tableau de bord Supabase → **Database** → **Webhooks** → **Create a
+new hook** :
+
+- Table : `entries`
+- Events : `Insert` et `Update`
+- Type : `Supabase Edge Functions`
+- Function : `send-push`
+
+### 5. Tester
+
+Ouvre le site sur un téléphone (via un lien de cercle), et clique sur
+"🔕 Activer les notifs" en haut de `cercle.html`. Sur iPhone, il faut
+d'abord ajouter le site à l'écran d'accueil (Partager → Sur l'écran
+d'accueil) — le bouton l'explique automatiquement si ce n'est pas encore
+fait. Publie ensuite un récit (brouillon → publié) depuis `moi.html` : la
+notification doit arriver en quelques secondes.
+
+Comme pour les codes de cercle, la sécurité de cette fonction est
+volontairement légère (`--no-verify-jwt`) : quelqu'un qui connaîtrait son
+URL pourrait en théorie déclencher un envoi de notif. Accepté sciemment vu
+le contexte : aucune donnée sensible n'y transite (juste un titre de
+récit), voir la note de sécurité en haut de `supabase/schema.sql`.
 
 ## Ce qu'il reste à faire
 

@@ -4,6 +4,12 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Les K-Chroniques de Léona</title>
+  <link rel="manifest" href="manifest.json" />
+  <link rel="apple-touch-icon" href="assets/icons/apple-touch-icon.png" />
+  <link rel="icon" href="assets/icons/favicon-32.png" />
+  <meta name="theme-color" content="#c1502b" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <link rel="stylesheet" href="assets/css/tokens.css" />
   <link rel="stylesheet" href="assets/css/site.css" />
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
@@ -16,7 +22,19 @@
         <p class="fds-title">Les K-Chroniques de Léona</p>
         <p class="fds-circle-tag" id="circle-tag"></p>
       </div>
-      <button class="fds-logout" id="logout-btn">Se déconnecter</button>
+      <div style="display: flex; gap: 8px; align-items: center">
+        <button class="fds-logout" id="notif-btn" style="display: none"></button>
+        <button class="fds-logout" id="logout-btn">Se déconnecter</button>
+      </div>
+    </div>
+
+    <div class="fds-bandeau" id="notif-ios-hint" style="display: none">
+      <div class="fds-bandeau-item">
+        <span class="fds-bandeau-value">
+          📲 Pour recevoir les notifications sur iPhone : appuie sur <b>Partager</b> puis
+          <b>Sur l'écran d'accueil</b>, puis reviens ici depuis cette nouvelle icône.
+        </span>
+      </div>
     </div>
 
     <div class="fds-bandeau" id="bandeau" style="display: none"></div>
@@ -47,5 +65,8 @@
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
           integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
   <script type="module" src="assets/js/cercle-page.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) navigator.serviceWorker.register('sw.js');
+  </script>
 </body>
 </html>

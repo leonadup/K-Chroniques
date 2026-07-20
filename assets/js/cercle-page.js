@@ -5,6 +5,7 @@ import { CIRCLES, canViewEntry, canViewPhoto } from './circles.js';
 import { escapeHtml, fmtEuros } from './utils.js';
 import { REACTION_PALETTE } from './reactions.js';
 import { setupDiscussionsBox } from './discussions.js';
+import { pushSupportStatus, getExistingSubscription, enablePushNotifications, disablePushNotifications } from './push-notifications.js';
 
 applySeason();
 
@@ -37,8 +38,49 @@ async function init() {
 
   setupTabs();
   setupDiscussionsBox(circleId);
+  setupNotifButton(circle);
   await loadBandeau();
   await loadEntries();
+}
+
+async function setupNotifButton(circle) {
+  const btn = document.getElementById('notif-btn');
+  const status = pushSupportStatus();
+  if (status === 'unsupported') return; // navigateur trop ancien : pas de bouton, pas d'erreur visible
+
+  btn.style.display = '';
+
+  const subscription = status === 'ready' ? await getExistingSubscription() : null;
+  setNotifBtnLabel(btn, !!subscription);
+
+  btn.addEventListener('click', async () => {
+    if (pushSupportStatus() === 'needs-install') {
+      document.getElementById('notif-ios-hint').style.display = '';
+      return;
+    }
+
+    const isEnabled = btn.dataset.enabled === 'true';
+    btn.disabled = true;
+    try {
+      if (isEnabled) {
+        await disablePushNotifications();
+        setNotifBtnLabel(btn, false);
+      } else {
+        await enablePushNotifications(circle.id);
+        setNotifBtnLabel(btn, true);
+        document.getElementById('notif-ios-hint').style.display = 'none';
+      }
+    } catch (err) {
+      alert(err instanceof Error ? err.message : "Impossible d'activer les notifications.");
+    } finally {
+      btn.disabled = false;
+    }
+  });
+}
+
+function setNotifBtnLabel(btn, enabled) {
+  btn.dataset.enabled = String(enabled);
+  btn.textContent = enabled ? '🔔 Notifs activées' : '🔕 Activer les notifs';
 }
 
 function setupTabs() {

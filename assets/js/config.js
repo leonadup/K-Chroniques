@@ -19,3 +19,9 @@ export const ACCESS_CODES = {
   amis: 'bienvenue',
   copain: 'mondidouchatalacremedeNOISETTE<3'
 };
+
+// Clé publique VAPID pour les notifications push (voir README, section
+// "Notifications push"). Comme la clé anon Supabase, c'est fait pour être
+// publique — c'est la clé PRIVÉE (jamais mise ici) qui doit rester secrète,
+// côté Edge Function uniquement.
+export const VAPID_PUBLIC_KEY = 'BLy5SYClFFRySB1G6W8n0UtbFPpn5y8HVY783lYldl4OPt3QQSfEbS0uVC75AB2x3A00H2qQh092-7pKOD3NIIQ';

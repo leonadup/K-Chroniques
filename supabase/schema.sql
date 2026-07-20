@@ -357,3 +357,25 @@ create policy "discussions supprimables par Moi" on discussions
   for delete using (auth.role() = 'authenticated');
 create policy "messages supprimables par Moi (suppression du fil)" on discussion_messages
   for delete using (auth.role() = 'authenticated');
+
+-- ---------------------------------------------------------------------------
+-- Migration 005 — Notifications push (site installable + notif à chaque
+-- récit/lettre publié) — voir supabase/migrations/005_push_subscriptions.sql
+-- ---------------------------------------------------------------------------
+create table if not exists push_subscriptions (
+  id uuid primary key default gen_random_uuid(),
+  circle_id text not null,
+  endpoint text not null unique,
+  p256dh text not null,
+  auth_key text not null,
+  created_at timestamptz not null default now()
+);
+
+create index if not exists push_subscriptions_circle_idx on push_subscriptions (circle_id);
+
+alter table push_subscriptions enable row level security;
+
+create policy "abonnement aux notifs ouvert en écriture" on push_subscriptions for insert with check (true);
+create policy "abonnement aux notifs modifiable (upsert par endpoint)" on push_subscriptions for update using (true) with check (true);
+create policy "désabonnement possible par tous" on push_subscriptions for delete using (true);
+create policy "abonnements lisibles par Moi" on push_subscriptions for select using (auth.role() = 'authenticated');
