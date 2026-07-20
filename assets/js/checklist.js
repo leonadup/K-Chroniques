@@ -7,7 +7,7 @@ const CATEGORIES = {
   installation: 'Installation',
   autre: 'Autre'
 };
-const STALE_DAYS = 10; // au-delà, on signale visuellement (et l'Edge Function checklist-reminder notifie)
+export const STALE_DAYS = 10; // au-delà, on signale visuellement (et l'Edge Function checklist-reminder notifie)
 
 export async function renderChecklist(container) {
   container.innerHTML = `<p class="hint-text">Chargement…</p>`;

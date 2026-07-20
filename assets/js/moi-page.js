@@ -10,6 +10,7 @@ import { renderChecklist } from './checklist.js';
 import { renderEmergencyInfo } from './emergency-info.js';
 import { renderWishlist } from './wishlist.js';
 import { renderQuickNotes } from './quick-notes.js';
+import { renderDashboard } from './dashboard.js';
 import { pushSupportStatus, getExistingSubscription, enablePushNotifications, disablePushNotifications } from './push-notifications.js';
 
 applySeason();
@@ -51,23 +52,31 @@ function showAdmin() {
   document.getElementById('adm-root').style.display = '';
 
   document.getElementById('moi-logout-btn').addEventListener('click', signOutMoi);
+  document.getElementById('adm-home-link').addEventListener('click', () => switchTab('accueil'));
 
   document.querySelectorAll('.adm-tab').forEach((tab) => {
     tab.addEventListener('click', () => switchTab(tab.dataset.tab));
   });
 
-  switchTab('finances');
+  switchTab('accueil');
   refreshDiscussionsBadge();
   setupNotifButton();
 }
 
-const TAB_NAMES = ['finances', 'recits', 'lettres', 'bandeau', 'discussions', 'coreen', 'journal', 'checklist', 'urgence', 'envies', 'notes'];
+const TAB_NAMES = ['accueil', 'bandeau', 'checklist', 'coreen', 'discussions', 'envies', 'finances', 'journal', 'lettres', 'notes', 'recits', 'urgence'];
 
 function switchTab(name) {
   document.querySelectorAll('.adm-tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
   TAB_NAMES.forEach((n) => {
     document.getElementById('panel-' + n).style.display = n === name ? '' : 'none';
   });
+
+  // L'accueil résume les autres onglets : on le recharge à chaque visite
+  // pour rester à jour, contrairement aux autres onglets mis en cache.
+  if (name === 'accueil') {
+    renderDashboard(document.getElementById('panel-accueil'), switchTab);
+    return;
+  }
 
   if (loadedTabs.has(name)) return;
   loadedTabs.add(name);
