@@ -2,6 +2,7 @@ import { supabase } from './supabase-client.js';
 import { escapeHtml, fmtEuros } from './utils.js';
 import { countUnreadDiscussions } from './admin-discussions.js';
 import { STALE_DAYS } from './checklist.js';
+import { icon } from './icons.js';
 
 /** Page d'accueil de l'espace Moi : résumé de chaque onglet en un coup
  * d'œil, accessible en cliquant sur "Moi" (pas un onglet à part entière —
@@ -51,22 +52,22 @@ export async function renderDashboard(container, goToTab) {
   const emergencyFilled = !!(emergency?.contact_france_phone || emergency?.embassy_phone || emergency?.insurance_name);
 
   container.innerHTML = `
-    <p style="font-family:var(--font-serif); font-size:26px; font-weight:600; margin:0 0 4px;">Bonjour Léona 👋</p>
+    <p style="font-family:var(--font-serif); font-size:26px; font-weight:600; margin:0 0 4px; display:flex; align-items:center; gap:8px;">Bonjour Léona ${icon('wave', 22)}</p>
     <p class="hint-text" style="margin-bottom:20px;">Un coup d'œil sur tout, clique une carte pour ouvrir l'onglet.</p>
     <div class="dash-grid">
-      ${dashCard('finances', '💰', 'Finances', typeof reste === 'number' ? fmtEuros(reste) : '—', 'reste à vivre ce mois-ci')}
+      ${dashCard('finances', icon('wallet'), 'Finances', typeof reste === 'number' ? fmtEuros(reste) : '—', 'reste à vivre ce mois-ci')}
       ${dashCard(
         'recits',
-        '📝',
+        icon('filetext'),
         'Récits & Lettres',
         draftCount > 0 ? `${draftCount} brouillon${draftCount > 1 ? 's' : ''}` : 'Tout est publié',
         `${publishedCount} publié${publishedCount > 1 ? 's' : ''} au total`,
         draftCount > 0
       )}
-      ${dashCard('bandeau', '📍', 'Où j\'en suis', escapeHtml(banner?.city || 'Non renseigné'), escapeHtml(banner?.status_note || ''))}
+      ${dashCard('bandeau', icon('pin'), 'Où j\'en suis', escapeHtml(banner?.city || 'Non renseigné'), escapeHtml(banner?.status_note || ''))}
       ${dashCard(
         'discussions',
-        '💬',
+        icon('chat'),
         'Discussions',
         unreadDiscussions > 0 ? `${unreadDiscussions} non lu${unreadDiscussions > 1 ? 's' : ''}` : 'À jour',
         'depuis tes proches',
@@ -74,23 +75,23 @@ export async function renderDashboard(container, goToTab) {
       )}
       ${dashCard(
         'coreen',
-        '🇰🇷',
+        icon('flag'),
         'Coréen',
-        `🔥 ${coreenStats?.streak_days ?? 0} · ${coreenStats?.xp ?? 0} XP`,
+        `${icon('flame', 14, 'icon-inline')} ${coreenStats?.streak_days ?? 0} · ${coreenStats?.xp ?? 0} XP`,
         dueCount > 0 ? `${dueCount} mot${dueCount > 1 ? 's' : ''} à réviser` : 'Rien à réviser aujourd\'hui'
       )}
-      ${dashCard('journal', '📔', 'Journal', journalDateLabel(journalLast?.[0]), journalLast?.[0]?.mood ? `Dernière humeur : ${escapeHtml(journalLast[0].mood)}` : "Pas encore d'entrée")}
+      ${dashCard('journal', icon('book'), 'Journal', journalDateLabel(journalLast?.[0]), journalLast?.[0]?.mood ? `Dernière humeur : ${escapeHtml(journalLast[0].mood)}` : "Pas encore d'entrée")}
       ${dashCard(
         'checklist',
-        '✅',
+        icon('checkcircle'),
         'Checklist PVT',
         `${checklistDone} / ${checklistTotal} faits`,
-        staleCount > 0 ? `⏰ ${staleCount} en attente depuis longtemps` : 'Rien qui traîne',
+        staleCount > 0 ? `${icon('clock', 13, 'icon-inline')} ${staleCount} en attente depuis longtemps` : 'Rien qui traîne',
         staleCount > 0
       )}
-      ${dashCard('urgence', '🚨', 'Urgence', emergencyFilled ? 'Complétée' : 'À compléter', 'contacts, assurance, santé', !emergencyFilled)}
-      ${dashCard('envies', '🗺️', 'Envies', `${wishlistDone} / ${wishlistTotal} faites`, 'lieux, restos, expériences')}
-      ${dashCard('notes', '🗒️', 'Notes', notesCount > 0 ? `${notesCount} note${notesCount > 1 ? 's' : ''}` : 'Rien pour l\'instant', lastNote?.[0]?.body ? escapeHtml(truncate(lastNote[0].body, 60)) : '')}
+      ${dashCard('urgence', icon('alert'), 'Urgence', emergencyFilled ? 'Complétée' : 'À compléter', 'contacts, assurance, santé', !emergencyFilled)}
+      ${dashCard('envies', icon('compass'), 'Envies', `${wishlistDone} / ${wishlistTotal} faites`, 'lieux, restos, expériences')}
+      ${dashCard('notes', icon('notes'), 'Notes', notesCount > 0 ? `${notesCount} note${notesCount > 1 ? 's' : ''}` : 'Rien pour l\'instant', lastNote?.[0]?.body ? escapeHtml(truncate(lastNote[0].body, 60)) : '')}
     </div>
   `;
 
@@ -99,10 +100,10 @@ export async function renderDashboard(container, goToTab) {
   });
 }
 
-function dashCard(tab, icon, title, value, note, flagged = false) {
+function dashCard(tab, iconHtml, title, value, note, flagged = false) {
   return `
     <div class="dash-card ${flagged ? 'flagged' : ''}" data-dash-card="${tab}">
-      <span class="dash-card-icon">${icon}</span>
+      <span class="dash-card-icon">${iconHtml}</span>
       <p class="dash-card-title">${title}</p>
       <p class="dash-card-value">${value}</p>
       ${note ? `<p class="dash-card-note">${note}</p>` : ''}
