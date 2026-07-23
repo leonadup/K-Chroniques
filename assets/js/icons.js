@@ -15,7 +15,12 @@ const PATHS = {
   clock: `<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3.5 2"/>`,
   alert: `<path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"/><path d="M12 9v4"/><circle cx="12" cy="17" r="0.6" fill="currentColor" stroke="none"/>`,
   compass: `<circle cx="12" cy="12" r="9"/><path d="m15.5 8.5-1.8 5.2-5.2 1.8 1.8-5.2 5.2-1.8Z"/>`,
-  notes: `<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6" r="0.9" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="0.9" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="0.9" fill="currentColor" stroke="none"/>`
+  notes: `<path d="M8 6h13"/><path d="M8 12h13"/><path d="M8 18h13"/><circle cx="3.5" cy="6" r="0.9" fill="currentColor" stroke="none"/><circle cx="3.5" cy="12" r="0.9" fill="currentColor" stroke="none"/><circle cx="3.5" cy="18" r="0.9" fill="currentColor" stroke="none"/>`,
+  volume: `<path d="M4 9v6h4l5 4V5L8 9H4Z"/><path d="M16 9a4 4 0 0 1 0 6"/><path d="M18.5 6.5a8 8 0 0 1 0 11"/>`,
+  star: `<path d="M12 3l2.5 5.6L21 9l-4.5 4.2 1.1 6.3L12 16.7 6.4 19.5l1.1-6.3L3 9l6.5-.4Z"/>`,
+  check: `<path d="M5 12.5l4.5 4.5L19 7"/>`,
+  x: `<path d="M6 6l12 12"/><path d="M18 6 6 18"/>`,
+  play: `<path d="M7 5v14l11-7Z" fill="currentColor" stroke="none"/>`
 };
 
 export function icon(name, size = 20, extraClass = '') {

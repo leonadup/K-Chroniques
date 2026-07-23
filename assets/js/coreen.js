@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
+import { icon } from './icons.js';
 
 // Espace personnel d'apprentissage du coréen (accessible uniquement depuis
 // moi.html, protégé par les mêmes policies RLS que les Finances — voir
@@ -71,14 +72,14 @@ function renderOverview(container) {
   container.innerHTML = `
     <div class="kr-stats-bar">
       <div class="kr-stat"><span class="kr-stat-value">${stats.xp}</span><span class="kr-stat-label">XP</span></div>
-      <div class="kr-stat"><span class="kr-stat-value">🔥 ${stats.streak_days}</span><span class="kr-stat-label">${stats.streak_days > 1 ? 'jours de suite' : 'jour'}</span></div>
+      <div class="kr-stat"><span class="kr-stat-value">${icon('flame', 18, 'icon-inline-md')} ${stats.streak_days}</span><span class="kr-stat-label">${stats.streak_days > 1 ? 'jours de suite' : 'jour'}</span></div>
       <div class="kr-stat"><span class="kr-stat-value">${masteredCount} / ${items.length}</span><span class="kr-stat-label">mots maîtrisés</span></div>
     </div>
 
     ${
       dailyQueue.length > 0
-        ? `<button class="btn kr-daily-btn" id="kr-daily-btn">▶ Session du jour (${dailyQueue.length} mots — ${dueItems.length} à réviser, ${dailyQueue.length - Math.min(dueItems.length, dailyQueue.length)} nouveaux)</button>`
-        : `<p class="hint-text">Tout est à jour pour aujourd'hui 🎉 Reviens demain, ou entraîne-toi sur une unité précise ci-dessous.</p>`
+        ? `<button class="btn kr-daily-btn" id="kr-daily-btn">${icon('play', 13, 'icon-inline')} Session du jour (${dailyQueue.length} mots — ${dueItems.length} à réviser, ${dailyQueue.length - Math.min(dueItems.length, dailyQueue.length)} nouveaux)</button>`
+        : `<p class="hint-text">Tout est à jour pour aujourd'hui ${icon('star', 14, 'icon-inline')} Reviens demain, ou entraîne-toi sur une unité précise ci-dessous.</p>`
     }
 
     <div class="kr-units-grid">
@@ -247,7 +248,7 @@ function renderDiscoverCard(container, item, progressed, total, onContinue) {
         <p class="kr-card-label">Nouveau mot</p>
         <div class="kr-korean-row">
           <p class="kr-korean-big">${escapeHtml(item.korean)}</p>
-          ${koreanVoice ? `<button class="kr-listen-btn" id="kr-listen">🔊</button>` : ''}
+          ${koreanVoice ? `<button class="kr-listen-btn" id="kr-listen" aria-label="Écouter">${icon('volume', 18)}</button>` : ''}
         </div>
         <p class="kr-romanization">${escapeHtml(item.romanization || '')}</p>
         <p class="kr-french-big">${escapeHtml(item.french)}</p>
@@ -277,10 +278,10 @@ function renderQuizCard(container, item, exerciseType, progressed, total, onAnsw
   const options = shuffle([correctOption, ...distractors]);
 
   const promptHtml = isListen
-    ? `<p class="kr-card-label">Écoute et choisis la bonne traduction</p><button class="kr-listen-btn kr-listen-btn-big" id="kr-listen">🔊 Écouter</button>`
+    ? `<p class="kr-card-label">Écoute et choisis la bonne traduction</p><button class="kr-listen-btn kr-listen-btn-big" id="kr-listen">${icon('volume', 16, 'icon-inline')} Écouter</button>`
     : showKoreanAsPrompt
       ? `<p class="kr-card-label">Que veut dire ce mot ?</p>
-         <div class="kr-korean-row"><p class="kr-korean-big">${escapeHtml(item.korean)}</p>${koreanVoice ? `<button class="kr-listen-btn" id="kr-listen">🔊</button>` : ''}</div>
+         <div class="kr-korean-row"><p class="kr-korean-big">${escapeHtml(item.korean)}</p>${koreanVoice ? `<button class="kr-listen-btn" id="kr-listen" aria-label="Écouter">${icon('volume', 18)}</button>` : ''}</div>
          <p class="kr-romanization">${escapeHtml(item.romanization || '')}</p>`
       : `<p class="kr-card-label">Comment dit-on ceci en coréen ?</p><p class="kr-french-big">${escapeHtml(item.french)}</p>`;
 
@@ -348,7 +349,9 @@ function renderTypingCard(container, item, progressed, total, onAnswered) {
     const feedback = document.getElementById('kr-feedback');
     feedback.style.display = 'block';
     feedback.className = `kr-feedback ${correct ? 'correct' : 'wrong'}`;
-    feedback.textContent = correct ? '✔ Exact !' : `✘ Réponse : ${item.romanization} (${item.korean})`;
+    feedback.innerHTML = correct
+      ? `${icon('check', 13, 'icon-inline')} Exact !`
+      : `${icon('x', 13, 'icon-inline')} Réponse : ${escapeHtml(item.romanization)} (${escapeHtml(item.korean)})`;
     document.getElementById('kr-continue').style.display = 'inline-block';
     document.getElementById('kr-continue').addEventListener('click', () => onAnswered(correct), { once: true });
   }
@@ -374,7 +377,9 @@ function revealAnswer(container, item, correct, optionsField) {
   const feedback = document.getElementById('kr-feedback');
   feedback.style.display = 'block';
   feedback.className = `kr-feedback ${correct ? 'correct' : 'wrong'}`;
-  feedback.textContent = correct ? '✔ Exact !' : `✘ La bonne réponse était : ${optionsField === 'korean' ? item.korean : item.french}`;
+  feedback.innerHTML = correct
+    ? `${icon('check', 13, 'icon-inline')} Exact !`
+    : `${icon('x', 13, 'icon-inline')} La bonne réponse était : ${escapeHtml(optionsField === 'korean' ? item.korean : item.french)}`;
   document.getElementById('kr-continue').style.display = 'inline-block';
 }
 
@@ -441,12 +446,12 @@ async function flushStats(xpGained) {
 function renderSummary(container, session, total, onDone) {
   container.innerHTML = `
     <div class="kr-summary">
-      <p class="kr-summary-emoji">🎉</p>
+      <p class="kr-summary-emoji">${icon('star', 44)}</p>
       <p class="kr-summary-title">Session terminée !</p>
       <div class="kr-summary-stats">
         <div class="kr-stat"><span class="kr-stat-value">+${session.xpGained}</span><span class="kr-stat-label">XP</span></div>
         <div class="kr-stat"><span class="kr-stat-value">${session.correctFirstTry}/${session.seenItemIds.size}</span><span class="kr-stat-label">du premier coup</span></div>
-        <div class="kr-stat"><span class="kr-stat-value">🔥 ${state.stats.streak_days}</span><span class="kr-stat-label">${state.stats.streak_days > 1 ? 'jours de suite' : 'jour'}</span></div>
+        <div class="kr-stat"><span class="kr-stat-value">${icon('flame', 18, 'icon-inline-md')} ${state.stats.streak_days}</span><span class="kr-stat-label">${state.stats.streak_days > 1 ? 'jours de suite' : 'jour'}</span></div>
       </div>
       <button class="btn" id="kr-summary-done">Retour</button>
     </div>

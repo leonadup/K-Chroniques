@@ -404,9 +404,9 @@
 .kr-french-big { font-family: var(--font-serif); font-size: 24px; font-weight: 600; margin: 0; }
 .kr-note { font-size: 12.5px; color: var(--ink-soft); font-style: italic; margin: 10px 0 0; }
 
-.kr-listen-btn { background: var(--paper); border: 1px solid var(--line); border-radius: 50%; width: 38px; height: 38px; font-size: 16px; cursor: pointer; }
-.kr-listen-btn:hover { border-color: var(--persimmon); }
-.kr-listen-btn-big { border-radius: 20px; width: auto; padding: 10px 20px; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; }
+.kr-listen-btn { background: var(--paper); border: 1px solid var(--line); border-radius: 50%; width: 38px; height: 38px; display: inline-flex; align-items: center; justify-content: center; color: var(--ink); cursor: pointer; }
+.kr-listen-btn:hover { border-color: var(--persimmon); color: var(--persimmon); }
+.kr-listen-btn-big { border-radius: 20px; width: auto; padding: 10px 20px; font-family: var(--font-mono); font-size: 12px; text-transform: uppercase; letter-spacing: 0.05em; display: inline-flex; align-items: center; }
 
 .kr-options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 18px; }
 .kr-option-btn {
@@ -429,7 +429,7 @@
 .kr-continue-btn { margin-top: 18px; width: 100%; }
 
 .kr-summary { max-width: 420px; margin: 60px auto; text-align: center; }
-.kr-summary-emoji { font-size: 48px; margin: 0; }
+.kr-summary-emoji { margin: 0; color: var(--persimmon); }
 .kr-summary-title { font-family: var(--font-serif); font-size: 24px; font-weight: 600; margin: 8px 0 24px; }
 .kr-summary-stats { display: flex; gap: 12px; margin-bottom: 28px; }
 
@@ -456,8 +456,9 @@
 .dash-card:hover { border-color: var(--persimmon); }
 .dash-card.flagged { border-left: 3px solid var(--persimmon); }
 .dash-card-icon { display: inline-flex; color: var(--persimmon); }
-.icon { flex-shrink: 0; }
-.icon-inline { width: 13px; height: 13px; vertical-align: -2px; margin-right: 1px; }
+.icon { flex-shrink: 0; vertical-align: -0.2em; }
+.icon-inline { width: 13px; height: 13px; margin-right: 1px; }
+.icon-inline-md { width: 18px; height: 18px; margin-right: 3px; }
 .dash-card-title { font-family: var(--font-mono); font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--ink-soft); margin: 8px 0 4px; }
 .dash-card-value { font-family: var(--font-serif); font-size: 19px; font-weight: 600; margin: 0; }
 .dash-card-note { font-size: 12px; color: var(--ink-soft); margin: 4px 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
