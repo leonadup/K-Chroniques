@@ -2,6 +2,7 @@ import { supabase } from './supabase-client.js';
 import { CIRCLES } from './circles.js';
 import { escapeHtml, slugify } from './utils.js';
 import { compressImage } from './compress-image.js';
+import { icon } from './icons.js';
 
 const NON_ADMIN_CIRCLES = Object.values(CIRCLES).filter((c) => !c.isAdmin);
 
@@ -32,8 +33,8 @@ export async function renderEntryList(container, type) {
                 const commentCount = e.comments?.[0]?.count ?? 0;
                 const reactionCount = e.reactions?.[0]?.count ?? 0;
                 const engagement = [
-                  commentCount > 0 ? `💬 ${commentCount}` : '',
-                  reactionCount > 0 ? `❤️ ${reactionCount}` : ''
+                  commentCount > 0 ? `${icon('chat', 13, 'icon-inline')} ${commentCount}` : '',
+                  reactionCount > 0 ? `${icon('heart', 13, 'icon-inline')} ${reactionCount}` : ''
                 ]
                   .filter(Boolean)
                   .join(' · ');
@@ -287,7 +288,7 @@ function renderPhotosEditor(el, entryId, photos, allowedVisibility) {
         <div class="adm-photo-row">
           <span class="adm-photo-path">${escapeHtml(p.storage_path)}</span>
           <span style="font-size:11px; color:var(--ink-soft);">${p.visibility && p.visibility.length ? p.visibility.join(', ') : "hérite de l'entrée"}</span>
-          <button class="mf-del" data-del-photo="${p.id}">✕</button>
+          <button class="mf-del" data-del-photo="${p.id}">${icon('x', 13)}</button>
         </div>
       `
         )

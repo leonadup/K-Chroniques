@@ -7,6 +7,18 @@ import { icon } from './icons.js';
 // supabase/migrations/006_coreen.sql). Répétition espacée façon Leitner :
 // 6 "boîtes", plus une boîte est haute, plus l'intervalle avant la
 // prochaine révision est long.
+const UNIT_ICONS = {
+  'hangul-voyelles': 'type',
+  'hangul-consonnes': 'keyboard',
+  salutations: 'wave',
+  'nombres-sino': 'hash',
+  'nombres-natifs': 'hash',
+  nourriture: 'utensils',
+  'transport-ville': 'transit',
+  'quotidien-pvt': 'chat',
+  'temps-dates': 'calendar'
+};
+
 const BOX_INTERVAL_DAYS = { 1: 0, 2: 1, 3: 3, 4: 7, 5: 16, 6: 35 };
 const MASTERED_BOX = 5;
 const DAILY_NEW_ITEMS = 8;
@@ -115,7 +127,7 @@ function unitCardHtml(unit) {
   const pct = total > 0 ? Math.round((mastered / total) * 100) : 0;
   return `
     <div class="kr-unit-card" data-unit-card="${unit.id}">
-      <span class="kr-unit-icon">${unit.icon || '📘'}</span>
+      <span class="kr-unit-icon">${icon(UNIT_ICONS[unit.id] || 'book', 22)}</span>
       <p class="kr-unit-title">${escapeHtml(unit.title)}</p>
       <div class="kr-unit-bar-track"><div class="kr-unit-bar-fill" style="width:${pct}%"></div></div>
       <p class="kr-unit-meta">${mastered}/${total} maîtrisés${due > 0 ? ` · <span class="kr-unit-due">${due} à réviser</span>` : ''}</p>
@@ -143,7 +155,7 @@ function shuffle(arr) {
 // ---------------------------------------------------------------------------
 // Synthèse vocale (gratuite, native au navigateur — pas de fichier audio à
 // héberger). Silencieusement indisponible si aucune voix coréenne n'est
-// installée : le bouton 🔊 ne s'affiche simplement pas dans ce cas.
+// installée : le bouton d'écoute ne s'affiche simplement pas dans ce cas.
 // ---------------------------------------------------------------------------
 let koreanVoice = null;
 function checkKoreanVoice() {

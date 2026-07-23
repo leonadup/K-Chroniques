@@ -20,7 +20,16 @@ const PATHS = {
   star: `<path d="M12 3l2.5 5.6L21 9l-4.5 4.2 1.1 6.3L12 16.7 6.4 19.5l1.1-6.3L3 9l6.5-.4Z"/>`,
   check: `<path d="M5 12.5l4.5 4.5L19 7"/>`,
   x: `<path d="M6 6l12 12"/><path d="M18 6 6 18"/>`,
-  play: `<path d="M7 5v14l11-7Z" fill="currentColor" stroke="none"/>`
+  play: `<path d="M7 5v14l11-7Z" fill="currentColor" stroke="none"/>`,
+  type: `<text x="12" y="17" text-anchor="middle" font-size="15" font-family="Georgia, serif" fill="currentColor" stroke="none">Aa</text>`,
+  keyboard: `<rect x="3" y="6" width="18" height="12" rx="2"/><path d="M6 10h.01M9 10h.01M12 10h.01M15 10h.01M18 10h.01M7 14h10"/>`,
+  hash: `<path d="M5 9h14"/><path d="M5 15h14"/><path d="M10 4 8 20"/><path d="M16 4l-2 16"/>`,
+  utensils: `<path d="M6 3v7a2 2 0 0 0 4 0V3"/><path d="M8 10v11"/><path d="M17 3c-1.6 0-2.5 1.6-2.5 4.5S15.4 12 17 12"/><path d="M17 3v18"/>`,
+  transit: `<rect x="4" y="4" width="16" height="12" rx="2"/><path d="M4 12h16"/><circle cx="8" cy="19" r="1.3" fill="currentColor" stroke="none"/><circle cx="16" cy="19" r="1.3" fill="currentColor" stroke="none"/>`,
+  calendar: `<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/>`,
+  bell: `<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/>`,
+  bellOff: `<path d="M6 9a6 6 0 0 1 9.5-4.9"/><path d="M18 9c0 5 2 6 2 6H8"/><path d="M4 4l16 16"/><path d="M10 20a2 2 0 0 0 4 0"/>`,
+  heart: `<path d="M12 20s-7-4.35-9.5-8.5C.7 8 2 4.5 5.5 4a5 5 0 0 1 6.5 2 5 5 0 0 1 6.5-2C22 4.5 23.3 8 21.5 11.5 19 15.65 12 20 12 20Z" fill="currentColor" stroke="none"/>`
 };
 
 export function icon(name, size = 20, extraClass = '') {

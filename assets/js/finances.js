@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml, fmtEuros } from './utils.js';
+import { icon } from './icons.js';
 
 const CATEGORY_LABELS = {
   logement: 'Logement',
@@ -207,7 +208,7 @@ function renderDepenses(el) {
                 <td><span class="mf-tag">${CATEGORY_LABELS[e.category] || e.category}</span></td>
                 <td>${escapeHtml(e.note || '')}</td>
                 <td class="amount">${fmtEuros(Number(e.amount))}</td>
-                <td><button class="mf-del" data-del-expense="${e.id}">✕</button></td>
+                <td><button class="mf-del" data-del-expense="${e.id}">${icon('x', 13)}</button></td>
               </tr>
             `
                   )
@@ -266,7 +267,7 @@ function renderRevenus(el) {
                 <td><span class="mf-tag">${escapeHtml(i.source)}</span></td>
                 <td>${escapeHtml(i.note || '')}</td>
                 <td class="amount">${fmtEuros(Number(i.amount))}</td>
-                <td><button class="mf-del" data-del-income="${i.id}">✕</button></td>
+                <td><button class="mf-del" data-del-income="${i.id}">${icon('x', 13)}</button></td>
               </tr>
             `
                   )

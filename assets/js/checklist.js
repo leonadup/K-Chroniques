@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
+import { icon } from './icons.js';
 
 const CATEGORIES = {
   'avant-depart': 'Avant le départ',
@@ -118,7 +119,7 @@ function itemHtml(item) {
           ${item.note ? `<br /><span class="adm-list-item-meta">${escapeHtml(item.note)}</span>` : ''}
         </span>
       </label>
-      <button class="mf-del" data-ck-delete="${item.id}" title="Supprimer">✕</button>
+      <button class="mf-del" data-ck-delete="${item.id}" title="Supprimer">${icon('x', 13)}</button>
     </div>
   `;
 }

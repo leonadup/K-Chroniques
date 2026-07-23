@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
+import { icon } from './icons.js';
 
 export async function renderQuickNotes(container) {
   container.innerHTML = `<p class="hint-text">Chargement…</p>`;
@@ -53,7 +54,7 @@ function noteHtml(note) {
       <span style="white-space:pre-wrap; font-size:14px;">${escapeHtml(note.body)}</span>
       <div style="display:flex; align-items:center; gap:10px; flex-shrink:0;">
         <span class="adm-list-item-meta">${new Date(note.created_at).toLocaleDateString('fr-FR')}</span>
-        <button class="mf-del" data-note-delete="${note.id}" title="Supprimer">✕</button>
+        <button class="mf-del" data-note-delete="${note.id}" title="Supprimer">${icon('x', 13)}</button>
       </div>
     </div>
   `;

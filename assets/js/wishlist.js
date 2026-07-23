@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
+import { icon } from './icons.js';
 
 let leafletMap = null;
 let leafletMarkersLayer = null;
@@ -110,7 +111,7 @@ function initMap(withCoords) {
     const marker = L.marker([item.lat, item.lng], { icon }).addTo(leafletMarkersLayer);
     marker.bindPopup(`
       <div class="fds-map-popup">
-        <p class="fds-map-popup-title">${escapeHtml(item.title)}${item.done ? ' ✔' : ''}</p>
+        <p class="fds-map-popup-title">${escapeHtml(item.title)}${item.done ? ' ' + icon('check', 13, 'icon-inline') : ''}</p>
         ${item.note ? `<p class="fds-map-popup-date">${escapeHtml(item.note)}</p>` : ''}
       </div>
     `);
@@ -130,7 +131,7 @@ function itemHtml(item) {
           ${item.note ? `<br /><span class="adm-list-item-meta">${escapeHtml(item.note)}</span>` : ''}
         </span>
       </label>
-      <button class="mf-del" data-wl-delete="${item.id}" title="Supprimer">✕</button>
+      <button class="mf-del" data-wl-delete="${item.id}" title="Supprimer">${icon('x', 13)}</button>
     </div>
   `;
 }

@@ -6,6 +6,7 @@ import { escapeHtml, fmtEuros } from './utils.js';
 import { REACTION_PALETTE } from './reactions.js';
 import { setupDiscussionsBox } from './discussions.js';
 import { pushSupportStatus, getExistingSubscription, enablePushNotifications, disablePushNotifications } from './push-notifications.js';
+import { icon } from './icons.js';
 
 applySeason();
 
@@ -80,7 +81,9 @@ async function setupNotifButton(circle) {
 
 function setNotifBtnLabel(btn, enabled) {
   btn.dataset.enabled = String(enabled);
-  btn.textContent = enabled ? '🔔 Notifs activées' : '🔕 Activer les notifs';
+  btn.innerHTML = enabled
+    ? `${icon('bell', 15, 'icon-inline')} Notifs activées`
+    : `${icon('bellOff', 15, 'icon-inline')} Activer les notifs`;
 }
 
 function setupTabs() {
@@ -202,7 +205,7 @@ function renderTimeline() {
       if (item._milestone) {
         return `
           <div class="fds-timeline-milestone">
-            <span class="fds-milestone-badge">🎉 ${escapeHtml(item.label)}</span>
+            <span class="fds-milestone-badge">${icon('star', 14, 'icon-inline')} ${escapeHtml(item.label)}</span>
             <span class="fds-timeline-date">${formatDateShort(item.entry_date)}</span>
           </div>
         `;
@@ -403,7 +406,7 @@ function commentThreadHtml(entry) {
           <div class="fds-comment">
             <div class="fds-comment-row">
               <span><b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}</span>
-              ${mine.has(c.id) && c.circle_id === circleId ? `<button class="fds-comment-delete" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">✕</button>` : ''}
+              ${mine.has(c.id) && c.circle_id === circleId ? `<button class="fds-comment-delete" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">${icon('x', 12)}</button>` : ''}
             </div>
             ${c.reply_text ? `<div class="fds-question-reply">${escapeHtml(c.reply_text)}</div>` : ''}
           </div>

@@ -12,6 +12,7 @@ import { renderWishlist } from './wishlist.js';
 import { renderQuickNotes } from './quick-notes.js';
 import { renderDashboard } from './dashboard.js';
 import { pushSupportStatus, getExistingSubscription, enablePushNotifications, disablePushNotifications } from './push-notifications.js';
+import { icon } from './icons.js';
 
 applySeason();
 
@@ -129,7 +130,9 @@ async function setupNotifButton() {
 
 function setNotifBtnLabel(btn, enabled) {
   btn.dataset.enabled = String(enabled);
-  btn.textContent = enabled ? '🔔 Notifs activées' : '🔕 Activer les notifs';
+  btn.innerHTML = enabled
+    ? `${icon('bell', 15, 'icon-inline')} Notifs activées`
+    : `${icon('bellOff', 15, 'icon-inline')} Activer les notifs`;
 }
 
 boot();

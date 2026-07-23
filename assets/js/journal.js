@@ -1,5 +1,6 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
+import { icon } from './icons.js';
 
 const MOODS = [
   { emoji: '😢', label: 'Difficile', color: 'var(--red)' },
@@ -99,7 +100,7 @@ function entryHtml(entry) {
     <div class="adm-list-item" style="cursor:default; align-items:flex-start; flex-direction:column; gap:8px;">
       <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
         <span class="adm-list-item-meta">${formatDate(entry.entry_date)} ${entry.mood ? `· ${entry.mood}` : ''}</span>
-        <button class="mf-del" data-journal-delete="${entry.id}" title="Supprimer">✕</button>
+        <button class="mf-del" data-journal-delete="${entry.id}" title="Supprimer">${icon('x', 13)}</button>
       </div>
       <p style="margin:0; font-size:14.5px; white-space:pre-wrap;">${escapeHtml(entry.body)}</p>
     </div>

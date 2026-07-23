@@ -183,7 +183,7 @@
 .fds-comment { font-size: 13.5px; margin-bottom: 8px; padding-left: 10px; border-left: 2px solid var(--paper-deep); }
 .fds-comment b { color: var(--ink); }
 .fds-comment-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
-.fds-comment-delete { background: none; border: none; color: var(--ink-soft); cursor: pointer; font-size: 13px; padding: 0 2px; flex-shrink: 0; }
+.fds-comment-delete { background: none; border: none; color: var(--ink-soft); cursor: pointer; padding: 0 2px; flex-shrink: 0; display: inline-flex; align-items: center; }
 .fds-comment-delete:hover { color: var(--red); }
 .fds-question-reply { margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--persimmon); color: var(--ink-soft); }
 .fds-comment-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
@@ -303,7 +303,7 @@
 .mf-table td { padding: 8px; border-bottom: 1px solid var(--paper-deep); }
 .mf-table td.amount { font-family: var(--font-mono); text-align: right; }
 .mf-tag { font-family: var(--font-mono); font-size: 10.5px; padding: 2px 8px; border-radius: 20px; background: var(--paper-deep); color: var(--ink-soft); }
-.mf-del { background: none; border: none; color: var(--ink-soft); cursor: pointer; font-size: 15px; padding: 0 4px; }
+.mf-del { background: none; border: none; color: var(--ink-soft); cursor: pointer; padding: 0 4px; display: inline-flex; align-items: center; }
 .mf-del:hover { color: var(--red); }
 .mf-empty { color: var(--ink-soft); font-size: 13px; padding: 14px 0; text-align: center; }
 
@@ -380,7 +380,7 @@
 .kr-units-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 12px; margin-bottom: 20px; }
 .kr-unit-card { background: var(--white); border: 1px solid var(--line); border-radius: 6px; padding: 16px 18px; cursor: pointer; }
 .kr-unit-card:hover { border-color: var(--persimmon); }
-.kr-unit-icon { font-size: 22px; }
+.kr-unit-icon { display: inline-flex; color: var(--persimmon); }
 .kr-unit-title { font-family: var(--font-serif); font-size: 15.5px; font-weight: 600; margin: 6px 0 10px; }
 .kr-unit-bar-track { background: var(--paper-deep); border-radius: 20px; height: 8px; overflow: hidden; }
 .kr-unit-bar-fill { height: 100%; background: var(--celadon); border-radius: 20px; }
