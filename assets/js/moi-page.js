@@ -121,7 +121,7 @@ async function setupNotifButton() {
         setNotifBtnLabel(btn, true);
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Impossible d'activer les notifications.");
+      alert(err?.message || "Impossible d'activer les notifications.");
     } finally {
       btn.disabled = false;
     }

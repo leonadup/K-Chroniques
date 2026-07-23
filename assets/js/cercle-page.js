@@ -72,7 +72,7 @@ async function setupNotifButton(circle) {
         document.getElementById('notif-ios-hint').style.display = 'none';
       }
     } catch (err) {
-      alert(err instanceof Error ? err.message : "Impossible d'activer les notifications.");
+      alert(err?.message || "Impossible d'activer les notifications.");
     } finally {
       btn.disabled = false;
     }

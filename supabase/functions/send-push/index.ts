@@ -30,7 +30,22 @@ webpush.setVapidDetails('mailto:leona.dupt@gmail.com', VAPID_PUBLIC_KEY, VAPID_P
 
 const adminClient = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
+// Requis dès qu'une Edge Function est appelée depuis le navigateur (et non
+// plus seulement par Supabase lui-même) : sans ces en-têtes, le navigateur
+// bloque la requête avant même qu'elle parte ("Failed to send a request to
+// the Edge Function" côté supabase-js) et la preflight OPTIONS doit
+// recevoir une réponse 2xx sans body.
+const corsHeaders = {
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
+  'Access-Control-Allow-Methods': 'POST, OPTIONS'
+};
+
 Deno.serve(async (req) => {
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
   const authHeader = req.headers.get('Authorization') || '';
   const token = authHeader.replace(/^Bearer\s+/i, '');
   const anonClient = createClient(SUPABASE_URL, ANON_KEY);
@@ -39,12 +54,12 @@ Deno.serve(async (req) => {
     error: authError
   } = await anonClient.auth.getUser(token);
   if (authError || !user) {
-    return new Response('unauthorized', { status: 401 });
+    return new Response('unauthorized', { status: 401, headers: corsHeaders });
   }
 
   const { entryId, circleIds } = await req.json();
   if (!entryId || !Array.isArray(circleIds) || circleIds.length === 0) {
-    return new Response('entryId et circleIds (non vide) requis', { status: 400 });
+    return new Response('entryId et circleIds (non vide) requis', { status: 400, headers: corsHeaders });
   }
 
   const { data: entry, error: entryError } = await adminClient
@@ -54,7 +69,7 @@ Deno.serve(async (req) => {
     .maybeSingle();
 
   if (entryError || !entry || !entry.published) {
-    return new Response('entrée introuvable ou non publiée', { status: 404 });
+    return new Response('entrée introuvable ou non publiée', { status: 404, headers: corsHeaders });
   }
 
   // Filet de sécurité : on ne notifie jamais un cercle qui n'a de toute
@@ -62,7 +77,7 @@ Deno.serve(async (req) => {
   // demandé un par erreur.
   const targetCircles = circleIds.filter((c: string) => (entry.visibility || []).includes(c));
   if (targetCircles.length === 0) {
-    return new Response("aucun des cercles demandés n'a accès à cette entrée", { status: 400 });
+    return new Response("aucun des cercles demandés n'a accès à cette entrée", { status: 400, headers: corsHeaders });
   }
 
   const { data: subscriptions } = await adminClient
@@ -96,6 +111,6 @@ Deno.serve(async (req) => {
 
   return new Response(JSON.stringify({ ok: true, notifiedCircles: targetCircles, subscriptionsSent: sent }), {
     status: 200,
-    headers: { 'Content-Type': 'application/json' }
+    headers: { ...corsHeaders, 'Content-Type': 'application/json' }
   });
 });
