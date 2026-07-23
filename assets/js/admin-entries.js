@@ -6,6 +6,34 @@ import { icon } from './icons.js';
 
 const NON_ADMIN_CIRCLES = Object.values(CIRCLES).filter((c) => !c.isAdmin);
 
+/** Nombre d'entrées (par type) ayant au moins un commentaire pas encore vu
+ * par Moi — alimente les badges rouges des onglets Récits/Lettres. */
+export async function countUnreadComments() {
+  const { data } = await supabase.from('comments').select('entry_id, entries!inner(type)').eq('seen_by_moi', false);
+  const counts = { recit: 0, lettre: 0 };
+  const seenEntries = new Set();
+  (data || []).forEach((c) => {
+    if (seenEntries.has(c.entry_id)) return;
+    seenEntries.add(c.entry_id);
+    const type = c.entries?.type;
+    if (type === 'recit' || type === 'lettre') counts[type] += 1;
+  });
+  return counts;
+}
+
+export async function refreshEntryCommentBadges() {
+  const counts = await countUnreadComments();
+  [
+    ['recits-badge', counts.recit],
+    ['lettres-badge', counts.lettre]
+  ].forEach(([id, count]) => {
+    const badge = document.getElementById(id);
+    if (!badge) return;
+    badge.textContent = count;
+    badge.style.display = count > 0 ? '' : 'none';
+  });
+}
+
 export async function renderEntryList(container, type) {
   const { data, error } = await supabase
     .from('entries')
@@ -282,9 +310,18 @@ function renderNotifyEditor(el, entry, successMessage) {
 
 async function renderEngagementEditor(el, entryId) {
   const [{ data: comments }, { data: reactions }] = await Promise.all([
-    supabase.from('comments').select('id, circle_id, author_name, body, reply_text, created_at').eq('entry_id', entryId).order('created_at', { ascending: true }),
+    supabase.from('comments').select('id, circle_id, author_name, body, reply_text, created_at, seen_by_moi').eq('entry_id', entryId).order('created_at', { ascending: true }),
     supabase.from('reactions').select('emoji').eq('entry_id', entryId)
   ]);
+
+  // Ouvrir l'entrée = les commentaires sont considérés vus : éteint le
+  // badge de l'onglet et réarme la notif push pour un futur commentaire
+  // (voir countUnreadComments / notify-comment).
+  const hasUnseen = (comments || []).some((c) => c.seen_by_moi === false);
+  if (hasUnseen) {
+    await supabase.from('comments').update({ seen_by_moi: true }).eq('entry_id', entryId).eq('seen_by_moi', false);
+    refreshEntryCommentBadges();
+  }
 
   const tally = {};
   (reactions || []).forEach((r) => (tally[r.emoji] = (tally[r.emoji] || 0) + 1));

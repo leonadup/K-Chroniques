@@ -1,7 +1,7 @@
 import { getMoiSession, signInMoi, signOutMoi } from './auth.js';
 import { applySeason } from './season.js';
 import { initFinances } from './finances.js';
-import { renderEntryList } from './admin-entries.js';
+import { renderEntryList, refreshEntryCommentBadges } from './admin-entries.js';
 import { renderBandeauAdmin } from './admin-bandeau.js';
 import { renderDiscussionsAdmin, refreshDiscussionsBadge } from './admin-discussions.js';
 import { renderCoreenTab } from './coreen.js';
@@ -61,6 +61,7 @@ function showAdmin() {
 
   switchTab('accueil');
   refreshDiscussionsBadge();
+  refreshEntryCommentBadges();
   setupNotifButton();
 }
 

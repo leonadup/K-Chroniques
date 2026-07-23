@@ -240,6 +240,37 @@ rien à faire) appelle cette fonction une fois par jour à 8h UTC — dès que
 ce fichier est sur GitHub, l'exécution est automatique, comme pour le ping
 Supabase quotidien.
 
+### 7. (Optionnel) Notification à Moi quand un cercle commente
+
+Léona peut être notifiée (push) quand quelqu'un commente un récit ou une
+lettre — au plus une notif par (entrée, cercle) tant qu'elle n'a pas rouvert
+l'entrée dans l'admin, pour ne pas être submergée si plusieurs commentaires
+arrivent avant qu'elle ne regarde. Un badge rouge sur les onglets
+Récits/Lettres indique aussi les entrées avec des commentaires non lus,
+indépendamment des notifs push.
+
+```
+supabase functions deploy notify-comment --no-verify-jwt
+```
+
+`--no-verify-jwt` ici : contrairement à `send-push`, cette fonction est bien
+appelée par Supabase lui-même (le Database Webhook ci-dessous), pas par une
+personne connectée.
+
+Puis, dans le **SQL Editor**, exécute
+[`supabase/migrations/011_comments_seen_by_moi.sql`](supabase/migrations/011_comments_seen_by_moi.sql),
+et crée un nouveau **Database Webhook** (Dashboard → **Database** →
+**Webhooks**) :
+
+- Table : `comments`
+- Events : `Insert`
+- Type : `Supabase Edge Functions`
+- Function : `notify-comment`
+
+Enfin, active les notifications depuis `moi.html` elle-même (bouton
+"🔕 Activer les notifs" en haut) si ce n'est pas déjà fait — voir
+étape 6 ci-dessus.
+
 ## Ce qu'il reste à faire
 
 - **Export album souvenir** : explicitement hors scope V1, voir le cahier
