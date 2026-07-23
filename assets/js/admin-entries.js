@@ -134,6 +134,7 @@ async function renderEntryEditor(container, type, entryId) {
         ${entry ? `<button class="btn btn-danger" id="f-delete">Supprimer</button>` : ''}
       </div>
 
+      ${entry?.published ? `<div id="notify-editor" style="margin-top:24px; border-top:1px solid var(--line); padding-top:18px;"></div>` : ''}
       ${entry ? `<div id="engagement-editor" style="margin-top:24px; border-top:1px solid var(--line); padding-top:18px;"></div>` : ''}
       ${entry && type === 'recit' ? `<div id="photos-editor" style="margin-top:24px; border-top:1px solid var(--line); padding-top:18px;"></div>` : ''}
     </div>
@@ -202,6 +203,10 @@ async function renderEntryEditor(container, type, entryId) {
     });
   }
 
+  if (entry?.published) {
+    renderNotifyEditor(document.getElementById('notify-editor'), entry);
+  }
+
   if (entry) {
     renderEngagementEditor(document.getElementById('engagement-editor'), entry.id);
   }
@@ -209,6 +214,70 @@ async function renderEntryEditor(container, type, entryId) {
   if (entry && type === 'recit') {
     renderPhotosEditor(document.getElementById('photos-editor'), entry.id, photos, allowedVisibility);
   }
+}
+
+/** Envoi manuel d'une notif push, cercle par cercle : rien n'est notifié
+ * automatiquement à la publication (voir supabase/functions/send-push).
+ * Rappelable plusieurs fois — utile si Léona a oublié un cercle. */
+function renderNotifyEditor(el, entry, successMessage) {
+  const notified = new Set(entry.notified_circles || []);
+  const targetCircles = NON_ADMIN_CIRCLES.filter((c) => (entry.visibility || []).includes(c.id));
+
+  el.innerHTML = `
+    <p style="font-family:var(--font-serif); font-size:18px; font-weight:600; margin:0 0 6px;">Notifier</p>
+    <p class="hint-text" style="margin-bottom:12px;">Rien n'est envoyé automatiquement. Coche les cercles à prévenir, puis envoie.</p>
+    ${
+      targetCircles.length === 0
+        ? `<p class="hint-text">Aucun cercle n'a accès à cette entrée.</p>`
+        : `
+    <div class="check-row" style="margin-bottom:14px;">
+      ${targetCircles
+        .map(
+          (c) => `
+        <label class="check-item">
+          <input type="checkbox" data-notify-circle="${c.id}" />
+          ${c.label}${notified.has(c.id) ? ` <span class="hint-text">(déjà notifié)</span>` : ''}
+        </label>
+      `
+        )
+        .join('')}
+    </div>
+    <p class="error-text" id="notify-error" style="display:none;"></p>
+    <p class="hint-text" id="notify-success" style="${successMessage ? '' : 'display:none;'}">${escapeHtml(successMessage || '')}</p>
+    <button class="btn" id="notify-send">${icon('bell', 14, 'icon-inline')} Envoyer la notification</button>
+    `
+    }
+  `;
+
+  el.querySelector('#notify-send')?.addEventListener('click', async () => {
+    const errorEl = document.getElementById('notify-error');
+    errorEl.style.display = 'none';
+
+    const circleIds = targetCircles.filter((c) => el.querySelector(`[data-notify-circle="${c.id}"]`).checked).map((c) => c.id);
+    if (circleIds.length === 0) {
+      errorEl.textContent = 'Sélectionne au moins un cercle.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const sendBtn = document.getElementById('notify-send');
+    sendBtn.disabled = true;
+    sendBtn.textContent = 'Envoi…';
+
+    const { data, error } = await supabase.functions.invoke('send-push', { body: { entryId: entry.id, circleIds } });
+
+    if (error) {
+      errorEl.textContent = "Échec de l'envoi — " + error.message;
+      errorEl.style.display = 'block';
+      sendBtn.disabled = false;
+      sendBtn.innerHTML = `${icon('bell', 14, 'icon-inline')} Envoyer la notification`;
+      return;
+    }
+
+    entry.notified_circles = Array.from(new Set([...(entry.notified_circles || []), ...(data?.notifiedCircles || circleIds)]));
+    const count = data?.subscriptionsSent ?? 0;
+    renderNotifyEditor(el, entry, `Notification envoyée (${count} abonné${count > 1 ? 's' : ''}).`);
+  });
 }
 
 async function renderEngagementEditor(el, entryId) {

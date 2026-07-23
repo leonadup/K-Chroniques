@@ -1,0 +1,13 @@
+-- Migration 008 — Notifications ciblées par cercle pour Récits & Lettres.
+--
+-- Avant : publier une entrée poussait automatiquement une notif à TOUS les
+-- cercles listés dans `visibility` (Database Webhook -> send-push, sur
+-- INSERT/UPDATE). Léona préfère choisir elle-même, entrée par entrée, à
+-- quel(s) cercle(s) envoyer une notif — et pouvoir la renvoyer plus tard à
+-- un cercle qu'elle aurait sauté. Voir supabase/functions/send-push et
+-- assets/js/admin-entries.js.
+--
+-- `notified_circles` garde une trace de qui a déjà reçu une notif pour
+-- cette entrée : uniquement indicatif pour l'affichage dans l'éditeur, la
+-- fonction reste appelable plusieurs fois pour le même cercle.
+alter table entries add column if not exists notified_circles text[] not null default '{}';
