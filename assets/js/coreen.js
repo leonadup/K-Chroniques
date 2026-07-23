@@ -20,7 +20,7 @@ const UNIT_ICONS = {
 };
 
 const BOX_INTERVAL_DAYS = { 1: 0, 2: 1, 3: 3, 4: 7, 5: 16, 6: 35 };
-const MASTERED_BOX = 5;
+export const MASTERED_BOX = 5;
 const DAILY_NEW_ITEMS = 8;
 const DAILY_SESSION_SIZE = 20;
 
