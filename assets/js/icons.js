@@ -29,7 +29,8 @@ const PATHS = {
   calendar: `<rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18"/><path d="M8 3v4"/><path d="M16 3v4"/>`,
   bell: `<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/>`,
   bellOff: `<path d="M6 9a6 6 0 0 1 9.5-4.9"/><path d="M18 9c0 5 2 6 2 6H8"/><path d="M4 4l16 16"/><path d="M10 20a2 2 0 0 0 4 0"/>`,
-  heart: `<path d="M12 20s-7-4.35-9.5-8.5C.7 8 2 4.5 5.5 4a5 5 0 0 1 6.5 2 5 5 0 0 1 6.5-2C22 4.5 23.3 8 21.5 11.5 19 15.65 12 20 12 20Z" fill="currentColor" stroke="none"/>`
+  heart: `<path d="M12 20s-7-4.35-9.5-8.5C.7 8 2 4.5 5.5 4a5 5 0 0 1 6.5 2 5 5 0 0 1 6.5-2C22 4.5 23.3 8 21.5 11.5 19 15.65 12 20 12 20Z" fill="currentColor" stroke="none"/>`,
+  lock: `<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>`
 };
 
 export function icon(name, size = 20, extraClass = '') {

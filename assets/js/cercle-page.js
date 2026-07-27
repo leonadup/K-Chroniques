@@ -86,16 +86,22 @@ function setNotifBtnLabel(btn, enabled) {
     : `${icon('bellOff', 15, 'icon-inline')} Activer les notifs`;
 }
 
+let quizLoaded = false;
+
 function setupTabs() {
   document.querySelectorAll('.fds-tab').forEach((tab) => {
     tab.addEventListener('click', () => {
       document.querySelectorAll('.fds-tab').forEach((t) => t.classList.remove('active'));
       tab.classList.add('active');
-      ['timeline', 'recits', 'galerie', 'carte', 'lettres', 'discussions'].forEach((name) => {
+      ['timeline', 'recits', 'galerie', 'carte', 'lettres', 'discussions', 'quiz'].forEach((name) => {
         const panel = document.getElementById('panel-' + name);
         if (panel) panel.style.display = name === tab.dataset.tab ? '' : 'none';
       });
       if (tab.dataset.tab === 'carte') initOrRefreshMap();
+      if (tab.dataset.tab === 'quiz' && !quizLoaded) {
+        quizLoaded = true;
+        import('./quiz-coreen.js').then(({ renderQuizTab }) => renderQuizTab(document.getElementById('panel-quiz')));
+      }
     });
   });
 }

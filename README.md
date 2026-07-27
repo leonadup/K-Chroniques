@@ -142,6 +142,18 @@ nécessaire.
   **Bloc-notes** rapide. Contenu créé par la migration `007_espace_perso.sql`
   (déjà incluse dans `schema.sql`). Le rappel de checklist réutilise les
   notifications push — voir la sous-section dédiée ci-dessous.
+- **Quiz coréen** ouvert aux cercles — onglet "Quiz coréen" de
+  `cercle.html`, basé sur le même vocabulaire que l'onglet Coréen de Moi
+  (lecture seule, aucune progression/XP personnelle exposée). Aucun score
+  n'est conservé, juste pour le plaisir d'apprendre quelques mots — voir
+  `assets/js/quiz-coreen.js` et la migration `012_quiz_coreen_cercles.sql`
+  (déjà incluse dans `schema.sql` pour une nouvelle installation).
+- **Capsule temporelle** (`moi.html` uniquement, jamais visible des cercles)
+  — écris un message (+ photo optionnelle) à te relire plus tard, verrouillé
+  jusqu'à une date de déblocage choisie librement ; plusieurs capsules
+  possibles en parallèle — voir `assets/js/capsule-temporelle.js` et la
+  migration `013_capsule_temporelle.sql` (déjà incluse dans `schema.sql`
+  pour une nouvelle installation).
 
 ## Notifications push (site installable façon appli)
 
@@ -273,10 +285,4 @@ Enfin, active les notifications depuis `moi.html` elle-même (bouton
 
 ## Ce qu'il reste à faire
 
-- **Export album souvenir** : explicitement hors scope V1, voir le cahier
-  des charges.
-- Rien n'a pu être testé dans un vrai navigateur pendant l'écriture de ce
-  code (pas d'environnement disponible) — attends-toi à corriger deux ou
-  trois petits bugs à la première utilisation réelle. C'est également vrai
-  pour la mise à jour Galerie/Jalons/Carte : vérifie-la en local avant de
-  déployer (voir plus haut pour lancer un petit serveur local).
+- Rien pour l'instant — testé en navigateur réel, tout est bon.

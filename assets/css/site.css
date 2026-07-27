@@ -446,6 +446,12 @@
 .jr-mood-dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
 
 /* ==========================================================================
+   Moi · Capsule temporelle
+   ========================================================================== */
+.tc-capsule-locked { opacity: 0.6; background: var(--paper); }
+.tc-capsule-locked .adm-list-item-title { display: flex; align-items: center; gap: 4px; }
+
+/* ==========================================================================
    Moi · Accueil (tableau de bord, accessible via le mot "Moi")
    ========================================================================== */
 .adm-title.clickable { cursor: pointer; }

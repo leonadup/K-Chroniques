@@ -10,6 +10,7 @@ import { renderChecklist } from './checklist.js';
 import { renderEmergencyInfo } from './emergency-info.js';
 import { renderWishlist } from './wishlist.js';
 import { renderQuickNotes } from './quick-notes.js';
+import { renderCapsuleTab } from './capsule-temporelle.js';
 import { renderDashboard } from './dashboard.js';
 import { pushSupportStatus, getExistingSubscription, enablePushNotifications, disablePushNotifications } from './push-notifications.js';
 import { icon } from './icons.js';
@@ -65,7 +66,7 @@ function showAdmin() {
   setupNotifButton();
 }
 
-const TAB_NAMES = ['accueil', 'bandeau', 'checklist', 'coreen', 'discussions', 'envies', 'finances', 'journal', 'lettres', 'notes', 'recits', 'urgence'];
+const TAB_NAMES = ['accueil', 'bandeau', 'capsule', 'checklist', 'coreen', 'discussions', 'envies', 'finances', 'journal', 'lettres', 'notes', 'recits', 'urgence'];
 
 function switchTab(name) {
   document.querySelectorAll('.adm-tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
@@ -88,6 +89,7 @@ function switchTab(name) {
   if (name === 'recits') renderEntryList(panel, 'recit');
   if (name === 'lettres') renderEntryList(panel, 'lettre');
   if (name === 'bandeau') renderBandeauAdmin(panel);
+  if (name === 'capsule') renderCapsuleTab(panel);
   if (name === 'discussions') renderDiscussionsAdmin(panel);
   if (name === 'coreen') renderCoreenTab(panel);
   if (name === 'journal') renderJournal(panel);

@@ -644,3 +644,28 @@ insert into checklist_items (title, note, category) values
   ('Ouvrir un compte bancaire coréen', 'Nécessite généralement l''ARC.', 'installation'),
   ('Enregistrer son adresse locale', null, 'installation')
 on conflict (title) do nothing;
+
+-- ---------------------------------------------------------------------------
+-- Migration 012 — Quiz coréen ouvert aux cercles (lecture seule) — voir
+-- supabase/migrations/012_quiz_coreen_cercles.sql
+-- ---------------------------------------------------------------------------
+create policy "vocabulaire coréen lisible par les cercles (unités)" on coreen_units for select using (true);
+create policy "vocabulaire coréen lisible par les cercles (items)" on coreen_items for select using (true);
+
+-- ---------------------------------------------------------------------------
+-- Migration 013 — Capsules temporelles (espace perso de Moi) — voir
+-- supabase/migrations/013_capsule_temporelle.sql
+-- ---------------------------------------------------------------------------
+create table if not exists time_capsules (
+  id uuid primary key default gen_random_uuid(),
+  title text,
+  body text not null,
+  unlock_date date not null,
+  photo_path text,
+  created_at timestamptz not null default now()
+);
+create index if not exists time_capsules_unlock_idx on time_capsules (unlock_date);
+
+alter table time_capsules enable row level security;
+create policy "capsules réservées à Moi" on time_capsules
+  for all using (auth.role() = 'authenticated') with check (auth.role() = 'authenticated');
