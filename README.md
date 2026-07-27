@@ -15,13 +15,14 @@ Node.js, pas de `npm install`. Le navigateur appelle Supabase directement.
   Récits, les Lettres, le Bandeau et les Finances nécessite d'être connectée
   avec le compte Supabase Auth de Léona (email + mot de passe). C'est la
   seule chose qui est réellement protégée côté base de données (RLS).
-- **Les codes des 4 autres cercles sont une simple politesse, pas une
-  sécurité.** Ils sont écrits en clair dans `assets/js/config.js` et
-  seulement vérifiés dans le navigateur. N'importe qui d'un peu curieux
-  avec les outils de développeur pourrait contourner le filtre par cercle
-  (par ex. lire une Lettre en tant que Famille). Accepté sciemment vu le
-  contexte (proches, pas un site sensible) — voir la note en haut de
-  `supabase/schema.sql`.
+- **Les codes personnels des proches sont une simple politesse, pas une
+  sécurité.** Chaque personne (Papa, Maman, Papy, un ami...) a son propre
+  code, géré depuis `moi.html` → onglet Personnes (table `people`), et
+  vérifié via une fonction Supabase qui ne renvoie que la ligne
+  correspondante — un peu mieux protégé que les anciens codes de cercle
+  qui étaient visibles en clair dans le code source, mais ça reste un
+  filtre, pas un verrou : accepté sciemment vu le contexte (proches, pas un
+  site sensible) — voir la note en haut de `supabase/schema.sql`.
 
 ## 1. Créer le projet Supabase
 
@@ -40,8 +41,11 @@ Ouvre [`assets/js/config.js`](assets/js/config.js) et remplace :
 
 - `SUPABASE_URL` et `SUPABASE_ANON_KEY` — Project Settings > API (la clé
   "anon" est faite pour être publique, ce n'est pas un secret à cacher).
-- Les 4 codes dans `ACCESS_CODES` (`parents`, `famille`, `amis`, `copain`) —
-  ce que tu veux, ce sont juste des mots de passe symboliques.
+
+Les codes d'accès des proches ne se configurent plus ici : une fois le
+compte Moi créé, connecte-toi sur `moi.html` → onglet **Personnes** pour
+ajouter chaque personne (prénom, groupe, code) — voir la section dédiée
+plus bas.
 
 Fais la même chose dans
 [`.github/workflows/ping-supabase.yml`](.github/workflows/ping-supabase.yml)
@@ -101,12 +105,17 @@ nécessaire.
 
 ## Ce qui est en place
 
-- **Accès par code** (Parents / Famille / Amis / Copain) — `acceder.html`,
-  filtre client-side, voir l'avertissement de sécurité plus haut.
+- **Accès par code personnel**, un par personne (Papa, Maman, Papy, chaque
+  ami...), chacun rattaché à l'un des 4 groupes de visibilité (Parents /
+  Famille / Amis / Copain) — `acceder.html`, géré depuis l'onglet Personnes
+  de `moi.html`, voir l'avertissement de sécurité plus haut.
 - **Compte Moi réel** (Supabase Auth) — seule vraie protection du site,
   couvre l'écriture des récits/lettres/photos/finances/bandeau.
 - **Timeline / Récits / Lettres** avec réactions emoji et commentaires,
-  boîte à questions, bandeau "où j'en suis" — `cercle.html`.
+  discussions, bandeau "où j'en suis" — `cercle.html`. Réactions et
+  commentaires sont maintenant attribués automatiquement à la personne
+  connectée (plus besoin de retaper son prénom), et les prénoms de qui a
+  réagi sont visibles sous chaque réaction.
 - **Résumé Finances "reste à vivre"** affiché automatiquement côté Parents,
   via la fonction SQL `reste_a_vivre_du_mois()` — c'est la seule donnée
   financière qui a une vraie protection en base (le détail par catégorie
@@ -144,8 +153,10 @@ nécessaire.
   notifications push — voir la sous-section dédiée ci-dessous.
 - **Quiz coréen** ouvert aux cercles — onglet "Quiz coréen" de
   `cercle.html`, basé sur le même vocabulaire que l'onglet Coréen de Moi
-  (lecture seule, aucune progression/XP personnelle exposée). Aucun score
-  n'est conservé, juste pour le plaisir d'apprendre quelques mots — voir
+  (lecture seule, aucune progression/XP personnelle exposée). Volontairement
+  léger : 2 questions à chaque visite, pas de "cours" à suivre. Le résultat
+  de chaque manche (prénom + score) est journalisé et les derniers résultats
+  de tout le monde s'affichent après chaque manche — voir
   `assets/js/quiz-coreen.js` et la migration `012_quiz_coreen_cercles.sql`
   (déjà incluse dans `schema.sql` pour une nouvelle installation).
 - **Capsule temporelle** (`moi.html` uniquement, jamais visible des cercles)
@@ -154,6 +165,14 @@ nécessaire.
   possibles en parallèle — voir `assets/js/capsule-temporelle.js` et la
   migration `013_capsule_temporelle.sql` (déjà incluse dans `schema.sql`
   pour une nouvelle installation).
+- **Onglet Personnes** (`moi.html` uniquement) — ajoute/retire les comptes
+  personnels des proches (prénom, groupe, code), remplace les anciens codes
+  partagés par cercle. Voir `assets/js/admin-people.js` et la migration
+  `014_personnes.sql` (déjà incluse dans `schema.sql` pour une nouvelle
+  installation). **Si ton projet existe déjà** : exécute cette migration,
+  puis recrée une entrée par personne réelle dans l'onglet Personnes et
+  communique-lui son nouveau code **avant** de redéployer — les anciens
+  codes de cercle ne fonctionnent plus une fois `config.js` mis à jour.
 
 ## Notifications push (site installable façon appli)
 

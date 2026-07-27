@@ -1,37 +1,57 @@
-import { ACCESS_CODES } from './config.js';
 import { supabase } from './supabase-client.js';
 
-const STORAGE_KEY = 'fds_circle';
+const STORAGE_KEY = 'fds_person';
 
-export function getCircle() {
-  return localStorage.getItem(STORAGE_KEY);
+/** Personne identifiée sur cet appareil — { id, circleId, name } — ou null. */
+export function getPerson() {
+  try {
+    return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null');
+  } catch {
+    return null;
+  }
 }
 
-export function setCircle(id) {
-  localStorage.setItem(STORAGE_KEY, id);
+export function setPerson(person) {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(person));
 }
 
-export function clearCircle() {
+export function clearPerson() {
   localStorage.removeItem(STORAGE_KEY);
 }
 
-export function checkCode(circleId, code) {
-  return typeof ACCESS_CODES[circleId] === 'string' && ACCESS_CODES[circleId] === code;
+export function getPersonName() {
+  return getPerson()?.name || '';
 }
 
-/** À appeler en haut de cercle.html : redirige vers acceder.html si aucun
- * cercle valide n'est mémorisé dans ce navigateur. */
+export function getPersonId() {
+  return getPerson()?.id || null;
+}
+
+/** Vérifie un code personnel auprès de Supabase (table `people`, via une
+ * fonction security definer qui ne renvoie que la ligne correspondante,
+ * jamais toute la table). Retourne la personne trouvée ou null. */
+export async function checkPersonCode(code) {
+  if (!code) return null;
+  const { data, error } = await supabase.rpc('check_person_code', { p_code: code });
+  if (error || !data || data.length === 0) return null;
+  const row = data[0];
+  return { id: row.id, circleId: row.circle_id, name: row.name };
+}
+
+/** À appeler en haut de cercle.html : redirige vers acceder.html si aucune
+ * personne valide n'est mémorisée dans ce navigateur. Retourne le circleId
+ * (les appelants existants ne connaissent que ça). */
 export function requireCircleOrRedirect() {
-  const circle = getCircle();
-  if (!circle || !ACCESS_CODES[circle]) {
+  const person = getPerson();
+  if (!person?.circleId) {
     window.location.href = 'acceder.html';
     return null;
   }
-  return circle;
+  return person.circleId;
 }
 
 export function logout() {
-  clearCircle();
+  clearPerson();
   window.location.href = 'index.html';
 }
 

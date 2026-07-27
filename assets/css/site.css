@@ -177,6 +177,7 @@
 .fds-reaction-btn { font-size: 14px; background: var(--paper); border: 1px solid var(--line); border-radius: 20px; padding: 4px 9px; cursor: pointer; display: inline-flex; align-items: center; gap: 4px; }
 .fds-reaction-btn.active { border-color: var(--season-accent); background: var(--season-accent-soft); }
 .fds-reaction-count { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); }
+.fds-reaction-names { font-size: 11.5px; color: var(--ink-soft); margin: 6px 0 0; }
 
 .fds-comments { margin-top: 16px; padding-top: 14px; border-top: 1px solid var(--line); }
 .fds-comments-label { font-family: var(--font-mono); font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-soft); margin: 0 0 10px; }
@@ -432,6 +433,8 @@
 .kr-summary-emoji { margin: 0; color: var(--persimmon); }
 .kr-summary-title { font-family: var(--font-serif); font-size: 24px; font-weight: 600; margin: 8px 0 24px; }
 .kr-summary-stats { display: flex; gap: 12px; margin-bottom: 28px; }
+.kr-quiz-recent { margin-top: 28px; text-align: left; background: var(--white); border: 1px solid var(--line); border-radius: 6px; padding: 14px 18px; }
+.kr-quiz-recent-row { font-size: 13px; margin: 4px 0; }
 
 /* ==========================================================================
    Moi · Journal (humeur)

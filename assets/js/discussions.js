@@ -1,6 +1,7 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
 import { deriveDiscussionTitle } from './discussion-title.js';
+import { getPersonName } from './auth.js';
 
 let circleId = null;
 let discussions = [];
@@ -69,7 +70,6 @@ function renderThreadList() {
       <p class="fds-question-title">Discussions</p>
       <p class="hint-text" style="margin-bottom:12px;">Pose une question, raconte-lui un truc, lance une conversation.</p>
       <div class="fds-comment-form" style="margin-bottom:18px;">
-        <input type="text" placeholder="Ton prénom" maxlength="40" id="new-thread-author" />
         <textarea placeholder="De quoi veux-tu parler ?" maxlength="1000" id="new-thread-body"></textarea>
         <button class="btn btn-ghost" id="new-thread-submit">Créer</button>
       </div>
@@ -102,9 +102,8 @@ function threadCardHtml(d) {
 }
 
 async function createThread() {
-  const authorInput = document.getElementById('new-thread-author');
   const bodyInput = document.getElementById('new-thread-body');
-  const author = authorInput.value.trim();
+  const author = getPersonName();
   const body = bodyInput.value.trim();
   if (!author || !body) return;
 
@@ -155,7 +154,6 @@ function openThread(discussionId) {
         }
       </div>
       <div class="fds-comment-form" style="margin-top:14px;">
-        <input type="text" placeholder="Ton prénom" maxlength="40" id="thread-reply-author" />
         <textarea placeholder="Ta réponse..." maxlength="1000" id="thread-reply-body"></textarea>
         <button class="btn btn-ghost" id="thread-reply-submit">Envoyer</button>
       </div>
@@ -169,9 +167,8 @@ function openThread(discussionId) {
 async function replyToThread(discussionId) {
   const d = discussions.find((x) => x.id === discussionId);
   if (!d) return;
-  const authorInput = document.getElementById('thread-reply-author');
   const bodyInput = document.getElementById('thread-reply-body');
-  const author = authorInput.value.trim();
+  const author = getPersonName();
   const body = bodyInput.value.trim();
   if (!author || !body) return;
 

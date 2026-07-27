@@ -17,17 +17,7 @@
   <main class="fds-login-wrap">
     <form class="fds-login-card" id="login-form">
       <h1 style="font-size:22px; margin-bottom:6px;">Les K-Chroniques de Léona</h1>
-      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:20px;">Entre ton code d'accès.</p>
-
-      <div class="field">
-        <label>Cercle</label>
-        <select id="circle-select">
-          <option value="parents">Parents</option>
-          <option value="famille">Famille</option>
-          <option value="amis">Amis</option>
-          <option value="copain">Copain</option>
-        </select>
-      </div>
+      <p style="font-size:13px; color:var(--ink-soft); margin-bottom:20px;">Entre ton code personnel.</p>
 
       <div class="field">
         <label>Code</label>
@@ -45,23 +35,20 @@
   </main>
 
   <script type="module">
-    import { checkCode, setCircle } from './assets/js/auth.js';
+    import { checkPersonCode, setPerson } from './assets/js/auth.js';
 
-    const params = new URLSearchParams(window.location.search);
-    const preset = params.get('cercle');
-    const select = document.getElementById('circle-select');
-    if (preset && [...select.options].some((o) => o.value === preset)) {
-      select.value = preset;
-    }
-
-    document.getElementById('login-form').addEventListener('submit', (e) => {
+    document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const circleId = select.value;
       const code = document.getElementById('code-input').value;
       const errorText = document.getElementById('error-text');
+      const submitBtn = e.target.querySelector('button[type="submit"]');
 
-      if (checkCode(circleId, code)) {
-        setCircle(circleId);
+      submitBtn.disabled = true;
+      const person = await checkPersonCode(code);
+      submitBtn.disabled = false;
+
+      if (person) {
+        setPerson(person);
         window.location.href = 'cercle.html';
       } else {
         errorText.textContent = 'Code incorrect.';

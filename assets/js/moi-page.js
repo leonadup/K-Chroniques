@@ -11,6 +11,7 @@ import { renderEmergencyInfo } from './emergency-info.js';
 import { renderWishlist } from './wishlist.js';
 import { renderQuickNotes } from './quick-notes.js';
 import { renderCapsuleTab } from './capsule-temporelle.js';
+import { renderPeopleAdmin } from './admin-people.js';
 import { renderDashboard } from './dashboard.js';
 import { pushSupportStatus, getExistingSubscription, enablePushNotifications, disablePushNotifications } from './push-notifications.js';
 import { icon } from './icons.js';
@@ -66,7 +67,7 @@ function showAdmin() {
   setupNotifButton();
 }
 
-const TAB_NAMES = ['accueil', 'bandeau', 'capsule', 'checklist', 'coreen', 'discussions', 'envies', 'finances', 'journal', 'lettres', 'notes', 'recits', 'urgence'];
+const TAB_NAMES = ['accueil', 'bandeau', 'capsule', 'checklist', 'coreen', 'discussions', 'envies', 'finances', 'journal', 'lettres', 'notes', 'personnes', 'recits', 'urgence'];
 
 function switchTab(name) {
   document.querySelectorAll('.adm-tab').forEach((t) => t.classList.toggle('active', t.dataset.tab === name));
@@ -97,6 +98,7 @@ function switchTab(name) {
   if (name === 'urgence') renderEmergencyInfo(panel);
   if (name === 'envies') renderWishlist(panel);
   if (name === 'notes') renderQuickNotes(panel);
+  if (name === 'personnes') renderPeopleAdmin(panel);
 }
 
 async function setupNotifButton() {

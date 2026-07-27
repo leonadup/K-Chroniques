@@ -1,5 +1,5 @@
 import { supabase } from './supabase-client.js';
-import { requireCircleOrRedirect, logout } from './auth.js';
+import { requireCircleOrRedirect, logout, getPersonName, getPersonId } from './auth.js';
 import { applySeason } from './season.js';
 import { CIRCLES, canViewEntry, canViewPhoto } from './circles.js';
 import { escapeHtml, fmtEuros } from './utils.js';
@@ -30,7 +30,8 @@ if (circleId) {
 
 async function init() {
   const circle = CIRCLES[circleId];
-  document.getElementById('circle-tag').textContent = 'Espace ' + circle.label;
+  const personName = getPersonName();
+  document.getElementById('circle-tag').textContent = (personName ? `Bonjour ${personName} — ` : '') + 'Espace ' + circle.label;
   document.getElementById('logout-btn').addEventListener('click', logout);
 
   if (circle.canReadLettres) {
@@ -366,11 +367,18 @@ function entryCardHtml(entry) {
 
 function reactionBarHtml(entry) {
   const counts = {};
+  const names = {};
   const active = new Set();
+  const myPersonId = getPersonId();
   (entry.reactions || []).forEach((r) => {
     counts[r.emoji] = (counts[r.emoji] || 0) + 1;
-    if (r.circle_id === circleId) active.add(r.emoji);
+    if (r.person_name) (names[r.emoji] ||= []).push(r.person_name);
+    if (myPersonId && r.person_id === myPersonId) active.add(r.emoji);
   });
+
+  const namesLine = REACTION_PALETTE.filter((emoji) => names[emoji]?.length)
+    .map((emoji) => `${emoji} ${escapeHtml(names[emoji].join(', '))}`)
+    .join(' · ');
 
   return `
     <div class="fds-reaction-bar">
@@ -382,6 +390,7 @@ function reactionBarHtml(entry) {
       `
       ).join('')}
     </div>
+    ${namesLine ? `<p class="fds-reaction-names">${namesLine}</p>` : ''}
   `;
 }
 
@@ -421,7 +430,6 @@ function commentThreadHtml(entry) {
           .join('')}
       </div>
       <div class="fds-comment-form">
-        <input type="text" placeholder="Ton prénom" maxlength="40" data-comment-author="${entry.id}" />
         <textarea placeholder="Un petit mot..." maxlength="1000" data-comment-body="${entry.id}"></textarea>
         <button class="btn btn-ghost" data-comment-submit="${entry.id}">Envoyer</button>
       </div>
@@ -444,13 +452,18 @@ function wireEntryCards(container) {
 async function toggleReaction(entryId, emoji) {
   const entry = allEntries.find((e) => e.id === entryId);
   if (!entry) return;
-  const existing = (entry.reactions || []).find((r) => r.circle_id === circleId && r.emoji === emoji);
+  const myPersonId = getPersonId();
+  const existing = (entry.reactions || []).find((r) => r.person_id === myPersonId && r.emoji === emoji);
 
   if (existing) {
     await supabase.from('reactions').delete().eq('id', existing.id);
     entry.reactions = entry.reactions.filter((r) => r.id !== existing.id);
   } else {
-    const { data } = await supabase.from('reactions').insert({ entry_id: entryId, circle_id: circleId, emoji }).select().single();
+    const { data } = await supabase
+      .from('reactions')
+      .insert({ entry_id: entryId, circle_id: circleId, emoji, person_id: myPersonId, person_name: getPersonName() })
+      .select()
+      .single();
     if (data) entry.reactions = [...(entry.reactions || []), data];
   }
 
@@ -465,9 +478,8 @@ async function submitComment(btn) {
   // deux fois en même temps (liste + modale), document.querySelector
   // prendrait toujours la première occurrence dans le DOM sinon.
   const form = btn.closest('.fds-comment-form');
-  const authorInput = form.querySelector('[data-comment-author]');
   const bodyInput = form.querySelector('[data-comment-body]');
-  const author = authorInput.value.trim();
+  const author = getPersonName();
   const body = bodyInput.value.trim();
   if (!author || !body) return;
 

@@ -5,20 +5,9 @@
 export const SUPABASE_URL = 'https://iglwwrfhfvzxifjbyusa.supabase.co';
 export const SUPABASE_ANON_KEY = 'sb_publishable_OWoN-xq1Z_wnCl8dQx_0qQ_C_E0LQ0k';
 
-// Codes d'accès des 4 cercles non-admin (Moi se connecte séparément avec un
-// vrai compte, voir moi.html). Change ces valeurs avant de partager les
-// liens à qui que ce soit.
-//
-// Important : ce n'est PAS un mécanisme de sécurité réel. Le code est
-// présent dans le code source de cette page, donc visible par quiconque
-// saurait où regarder. C'est un filtre pour que chacun tombe sur l'espace
-// qui le concerne, pas un verrou — voir la note en haut de schema.sql.
-export const ACCESS_CODES = {
-  parents: 'JeVousAimeF0RT!',
-  famille: 'bienvenue',
-  amis: 'bienvenue',
-  copain: 'mondidouchatalacremedeNOISETTE<3'
-};
+// Les codes d'accès des cercles non-admin ne sont plus ici : chaque
+// personne a désormais son propre code, géré depuis moi.html → onglet
+// Personnes (table `people`, voir supabase/migrations/014_personnes.sql).
 
 // Clé publique VAPID pour les notifications push (voir README, section
 // "Notifications push"). Comme la clé anon Supabase, c'est fait pour être
