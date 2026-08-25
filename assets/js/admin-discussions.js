@@ -91,10 +91,16 @@ async function renderThreadDetailAdmin(container, discussionId, showArchived = f
     return;
   }
 
+  // Le fil privé se déverrouille avec le code personnel de son créateur
+  // (owner_person_id, voir migration 017) — pas un code séparé à afficher.
+  // Le premier message du fil est toujours celui de la personne qui l'a
+  // créé (voir createThread dans discussions.js), donc son nom suffit ici.
+  const creatorName = (messages || [])[0]?.author_name;
+
   container.innerHTML = `
     <button class="btn-link" id="thread-back-btn" style="margin-bottom:14px;">← Retour à la liste</button>
     <div class="mf-panel">
-      <p class="adm-list-item-meta" style="margin-bottom:10px;">${escapeHtml(CIRCLES[discussion.circle_id]?.label ?? discussion.circle_id)}${discussion.is_private ? ` · ${icon('lock', 11, 'icon-inline')} Privée — code : ${escapeHtml(discussion.private_code || '—')}` : ''}</p>
+      <p class="adm-list-item-meta" style="margin-bottom:10px;">${escapeHtml(CIRCLES[discussion.circle_id]?.label ?? discussion.circle_id)}${discussion.is_private ? ` · ${icon('lock', 11, 'icon-inline')} Privée — s'ouvre avec le code personnel de ${escapeHtml(creatorName || 'son créateur')}` : ''}</p>
       <div class="adm-title-edit">
         <input type="text" id="thread-title-input" value="${escapeHtml(discussion.title)}" />
         <button class="btn-link" id="thread-title-save">Enregistrer le titre</button>

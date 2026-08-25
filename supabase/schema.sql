@@ -749,5 +749,15 @@ create policy "commentaires modifiables par tous (auteur)" on comments
 -- ---------------------------------------------------------------------------
 -- Migration 016 — code dédié par discussion privée, au lieu de réutiliser
 -- n'importe quel code personnel valide (voir supabase/migrations/016_code_discussion_privee.sql)
+-- Remplacée par la migration 017 juste en dessous : gardée ici pour
+-- l'historique, la colonne qu'elle crée est aussitôt supprimée après.
 -- ---------------------------------------------------------------------------
 alter table discussions add column if not exists private_code text;
+
+-- ---------------------------------------------------------------------------
+-- Migration 017 — le code qui déverrouille une discussion privée est celui
+-- (déjà existant) de la personne qui l'a créée, pas un code inventé à la
+-- volée (voir supabase/migrations/017_discussion_privee_code_personnel.sql)
+-- ---------------------------------------------------------------------------
+alter table discussions add column if not exists owner_person_id uuid references people(id) on delete set null;
+alter table discussions drop column if exists private_code;

@@ -2,17 +2,25 @@ import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
 import { icon } from './icons.js';
 import { deriveDiscussionTitle } from './discussion-title.js';
-import { getPersonName, getPersonId } from './auth.js';
+import { getPersonName, getPersonId, checkPersonCode } from './auth.js';
 
 let circleId = null;
 let discussions = [];
 
 // Discussions privées : le déverrouillage n'est mémorisé que le temps de
 // l'onglet (sessionStorage), pas façon "souviens-toi de moi" — utile sur un
-// appareil partagé par plusieurs personnes du même cercle.
+// appareil partagé par plusieurs personnes du même cercle. La clé inclut
+// l'identifiant de la personne connectée : sur un appareil partagé où
+// plusieurs personnes se connectent l'une après l'autre dans le même
+// onglet, sans ça la deuxième personne héritait du déverrouillage laissé
+// par la première.
+function unlockedKey() {
+  return `fds_unlocked_${circleId}_${getPersonId() || 'anon'}`;
+}
+
 function getUnlockedSet() {
   try {
-    return new Set(JSON.parse(sessionStorage.getItem(`fds_unlocked_${circleId}`) || '[]'));
+    return new Set(JSON.parse(sessionStorage.getItem(unlockedKey()) || '[]'));
   } catch {
     return new Set();
   }
@@ -21,15 +29,11 @@ function getUnlockedSet() {
 function markUnlocked(discussionId) {
   const set = getUnlockedSet();
   set.add(discussionId);
-  sessionStorage.setItem(`fds_unlocked_${circleId}`, JSON.stringify([...set]));
+  sessionStorage.setItem(unlockedKey(), JSON.stringify([...set]));
 }
 
 function isLocked(d) {
   return d.is_private && !getUnlockedSet().has(d.id);
-}
-
-function normalizeCode(code) {
-  return (code || '').trim().toLowerCase();
 }
 
 export async function setupDiscussionsBox(circle) {
@@ -97,13 +101,12 @@ function renderThreadList() {
       <p class="hint-text" style="margin-bottom:12px;">Pose une question, raconte-lui un truc, lance une conversation.</p>
       <div class="fds-comment-form" style="margin-bottom:18px;">
         <textarea placeholder="De quoi veux-tu parler ?" maxlength="1000" id="new-thread-body"></textarea>
-        <label class="check-item" style="margin:8px 0;"><input type="checkbox" id="new-thread-private" /> ${icon('lock', 13, 'icon-inline')} Discussion privée (protégée par un code que tu choisis)</label>
-        <div class="field" id="new-thread-private-code-field" style="display:none; flex:1 1 100%; margin:0 0 8px;">
-          <label>Code d'accès à choisir</label>
-          <input type="text" id="new-thread-private-code" maxlength="80" placeholder="Ex : un mot que toi seule et la personne concernée connaîtrez" />
-          <p class="hint-text">Léona voit toujours le contenu sans code. Ce code sert à protéger le fil des autres personnes de ton cercle — communique-le toi-même à qui doit pouvoir le lire.</p>
-        </div>
-        <p class="error-text" id="new-thread-error" style="display:none; flex:1 1 100%; margin:0;"></p>
+        <label class="check-item" style="margin:8px 0;"><input type="checkbox" id="new-thread-private" /> ${icon('lock', 13, 'icon-inline')} Discussion privée (protégée par TON code personnel)</label>
+        <p class="hint-text" id="new-thread-private-hint" style="display:none; flex:1 1 100%; margin:0 0 8px;">
+          Léona voit toujours le contenu sans code. Pour les autres, il faudra entrer TON code personnel
+          (celui que tu utilises pour te connecter) — communique-le toi-même à qui doit pouvoir lire ce fil.
+          Personne d'autre ne pourra l'ouvrir avec son propre code.
+        </p>
         <button class="btn btn-ghost" id="new-thread-submit">Créer</button>
       </div>
       <div class="fds-thread-list">
@@ -114,7 +117,7 @@ function renderThreadList() {
 
   document.getElementById('new-thread-submit').addEventListener('click', createThread);
   document.getElementById('new-thread-private').addEventListener('change', (e) => {
-    document.getElementById('new-thread-private-code-field').style.display = e.target.checked ? '' : 'none';
+    document.getElementById('new-thread-private-hint').style.display = e.target.checked ? '' : 'none';
   });
   box.querySelectorAll('[data-thread-open]').forEach((el) => {
     el.addEventListener('click', () => openThread(el.dataset.threadOpen));
@@ -155,19 +158,11 @@ async function createThread() {
   if (!author || !body) return;
 
   const isPrivate = document.getElementById('new-thread-private').checked;
-  const privateCode = document.getElementById('new-thread-private-code').value.trim();
-  const errorEl = document.getElementById('new-thread-error');
-  errorEl.style.display = 'none';
-  if (isPrivate && !privateCode) {
-    errorEl.textContent = 'Choisis un code pour protéger cette discussion privée.';
-    errorEl.style.display = 'block';
-    return;
-  }
 
   const title = deriveDiscussionTitle(body);
   const { data: discussion, error } = await supabase
     .from('discussions')
-    .insert({ circle_id: circleId, title, is_private: isPrivate, private_code: isPrivate ? privateCode : null })
+    .insert({ circle_id: circleId, title, is_private: isPrivate, owner_person_id: isPrivate ? getPersonId() : null })
     .select()
     .single();
   if (error || !discussion) return;
@@ -254,7 +249,7 @@ function renderUnlockForm(d) {
     <div class="fds-question-panel">
       <button class="btn-link fds-thread-back" id="thread-back-btn">← Retour aux discussions</button>
       <p class="fds-question-title">${icon('lock', 15, 'icon-inline')} Discussion privée</p>
-      <p class="hint-text" style="margin-bottom:12px;">Cette discussion est protégée par un code choisi par la personne qui l'a créée (ce n'est pas ton code personnel de connexion) — demande-le-lui si tu ne l'as pas.</p>
+      <p class="hint-text" style="margin-bottom:12px;">Cette discussion est protégée par le code personnel de la personne qui l'a créée — demande-le-lui si tu ne l'as pas. Ton propre code, s'il est différent, ne l'ouvrira pas : c'est normal, ce fil n'est pas pour toi.</p>
       <div class="field">
         <label>Code d'accès</label>
         <div class="pw-wrap">
@@ -276,11 +271,16 @@ function renderUnlockForm(d) {
     unlockInput.type = showing ? 'password' : 'text';
     unlockToggle.innerHTML = icon(showing ? 'eye' : 'eyeOff', 18);
   });
-  document.getElementById('unlock-submit').addEventListener('click', () => {
+  document.getElementById('unlock-submit').addEventListener('click', async () => {
     const code = document.getElementById('unlock-code-input').value;
     const errorEl = document.getElementById('unlock-error');
     errorEl.style.display = 'none';
-    if (!code || normalizeCode(code) !== normalizeCode(d.private_code)) {
+    if (!code) return;
+    // La discussion n'est déverrouillée que si le code saisi correspond
+    // précisément à la personne qui l'a créée (owner_person_id) — pas
+    // n'importe quel code personnel valide de la famille, voir migration 017.
+    const person = await checkPersonCode(code);
+    if (!person || person.id !== d.owner_person_id) {
       errorEl.style.display = 'block';
       return;
     }
