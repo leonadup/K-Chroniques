@@ -41,8 +41,51 @@ async function init() {
   setupTabs();
   setupDiscussionsBox(circleId);
   setupNotifButton(circle);
+  setupPhotoLightbox();
   await loadBandeau();
   await loadEntries();
+}
+
+// Délégué sur document une seule fois : les cartes de récit se re-rendent
+// souvent (liste, modale, refreshEntryCard...), inutile de re-brancher un
+// listener à chaque fois.
+function setupPhotoLightbox() {
+  document.addEventListener('click', (e) => {
+    const img = e.target.closest('[data-photo-zoom]');
+    if (img) openPhotoLightbox(img.dataset.photoZoom, img.dataset.photoZoomCaption);
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Enter' && e.key !== ' ') return;
+    const img = e.target.closest?.('[data-photo-zoom]');
+    if (img) {
+      e.preventDefault();
+      openPhotoLightbox(img.dataset.photoZoom, img.dataset.photoZoomCaption);
+    }
+  });
+}
+
+function openPhotoLightbox(src, caption) {
+  const mount = document.getElementById('photo-lightbox-mount');
+  mount.innerHTML = `
+    <div class="fds-lightbox-backdrop" id="photo-lightbox-backdrop" role="button" tabindex="0" aria-label="Fermer">
+      <button class="fds-lightbox-close" id="photo-lightbox-close" aria-label="Fermer">${icon('x', 20)}</button>
+      <img class="fds-lightbox-img" src="${escapeHtml(src)}" alt="${escapeHtml(caption || '')}" />
+      ${caption ? `<p class="fds-lightbox-caption">${escapeHtml(caption)}</p>` : ''}
+    </div>
+  `;
+
+  const onKey = (e) => {
+    if (e.key === 'Escape') close();
+  };
+  const close = () => {
+    mount.innerHTML = '';
+    document.removeEventListener('keydown', onKey);
+  };
+  document.getElementById('photo-lightbox-backdrop').addEventListener('click', (e) => {
+    if (e.target.id === 'photo-lightbox-backdrop') close();
+  });
+  document.getElementById('photo-lightbox-close').addEventListener('click', close);
+  document.addEventListener('keydown', onKey);
 }
 
 async function setupNotifButton(circle) {
@@ -346,7 +389,10 @@ function entryCardHtml(entry) {
   const photosHtml =
     entry.type === 'recit' && visiblePhotos.length > 0
       ? `<div class="fds-photo-grid">${visiblePhotos
-          .map((p) => `<img class="fds-photo" src="${escapeHtml(resolvePhotoUrl(p.storage_path))}" alt="${escapeHtml(p.caption || '')}" />`)
+          .map(
+            (p) =>
+              `<img class="fds-photo" src="${escapeHtml(resolvePhotoUrl(p.storage_path))}" alt="${escapeHtml(p.caption || '')}" data-photo-zoom="${escapeHtml(resolvePhotoUrl(p.storage_path))}" data-photo-zoom-caption="${escapeHtml(p.caption || '')}" role="button" tabindex="0" />`
+          )
           .join('')}</div>`
       : '';
 
