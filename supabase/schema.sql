@@ -716,3 +716,32 @@ create policy "tentatives de quiz lisibles par tous" on quiz_attempts for select
 create policy "tentatives de quiz écrites par tous" on quiz_attempts for insert with check (true);
 create policy "tentatives de quiz supprimables par Moi" on quiz_attempts
   for delete using (auth.role() = 'authenticated');
+
+-- ---------------------------------------------------------------------------
+-- Migration 015 — édition d'une personne (statut actif/bloqué), édition et
+-- suppression d'un message précis dans une discussion, discussions privées,
+-- édition d'un commentaire par son auteur
+-- (voir supabase/migrations/015_edition_personnes_messages_discussions_privees.sql)
+-- ---------------------------------------------------------------------------
+alter table people add column if not exists active boolean not null default true;
+
+create or replace function check_person_code(p_code text)
+returns table(id uuid, circle_id text, name text)
+language sql
+security definer
+set search_path = public
+as $$
+  select id, circle_id, name from people where access_code = p_code and active = true;
+$$;
+
+alter table discussion_messages add column if not exists author_person_id uuid references people(id) on delete set null;
+
+create policy "messages modifiables par tous (auteur)" on discussion_messages
+  for update using (true) with check (true);
+create policy "messages supprimables par tous (auteur)" on discussion_messages
+  for delete using (true);
+
+alter table discussions add column if not exists is_private boolean not null default false;
+
+create policy "commentaires modifiables par tous (auteur)" on comments
+  for update using (true) with check (true);

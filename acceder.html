@@ -21,7 +21,10 @@
 
       <div class="field">
         <label>Code</label>
-        <input type="password" id="code-input" autofocus required />
+        <div class="pw-wrap">
+          <input type="password" id="code-input" autofocus required />
+          <button type="button" class="pw-toggle" id="code-toggle" aria-label="Afficher le code"></button>
+        </div>
       </div>
 
       <p class="error-text" id="error-text" style="display:none;"></p>
@@ -36,10 +39,20 @@
 
   <script type="module">
     import { checkPersonCode, setPerson } from './assets/js/auth.js';
+    import { icon } from './assets/js/icons.js';
+
+    const codeInput = document.getElementById('code-input');
+    const codeToggle = document.getElementById('code-toggle');
+    codeToggle.innerHTML = icon('eye', 18);
+    codeToggle.addEventListener('click', () => {
+      const showing = codeInput.type === 'text';
+      codeInput.type = showing ? 'password' : 'text';
+      codeToggle.innerHTML = icon(showing ? 'eye' : 'eyeOff', 18);
+    });
 
     document.getElementById('login-form').addEventListener('submit', async (e) => {
       e.preventDefault();
-      const code = document.getElementById('code-input').value;
+      const code = codeInput.value;
       const errorText = document.getElementById('error-text');
       const submitBtn = e.target.querySelector('button[type="submit"]');
 
@@ -49,7 +62,10 @@
 
       if (person) {
         setPerson(person);
-        window.location.href = 'cercle.html';
+        // replace() plutôt que href : évite de garder acceder.html dans
+        // l'historique, sinon un swipe-back (iOS, en PWA installée) y
+        // ramène l'utilisateur au lieu de rester sur cercle.html.
+        window.location.replace('cercle.html');
       } else {
         errorText.textContent = 'Code incorrect.';
         errorText.style.display = 'block';

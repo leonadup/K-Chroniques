@@ -27,7 +27,10 @@
       </div>
       <div class="field">
         <label>Mot de passe</label>
-        <input type="password" id="moi-password" required />
+        <div class="pw-wrap">
+          <input type="password" id="moi-password" required />
+          <button type="button" class="pw-toggle" id="moi-password-toggle" aria-label="Afficher le mot de passe"></button>
+        </div>
       </div>
 
       <p class="error-text" id="moi-login-error" style="display: none"></p>

@@ -62,6 +62,26 @@
 }
 .field textarea { min-height: 140px; resize: vertical; }
 
+.pw-wrap { position: relative; }
+.pw-wrap input { padding-right: 38px !important; }
+.pw-toggle {
+  position: absolute;
+  right: 4px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ink-soft);
+  cursor: pointer;
+}
+.pw-toggle:hover { color: var(--ink); }
+
 .check-row { display: flex; gap: 16px; flex-wrap: wrap; }
 .check-item { display: flex; align-items: center; gap: 6px; font-size: 13.5px; }
 
@@ -186,6 +206,7 @@
 .fds-comment-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 14px; }
 .fds-comment-delete { background: none; border: none; color: var(--ink-soft); cursor: pointer; padding: 0 2px; flex-shrink: 0; display: inline-flex; align-items: center; }
 .fds-comment-delete:hover { color: var(--red); }
+.fds-comment-edit:hover { color: var(--persimmon); }
 .fds-question-reply { margin-top: 4px; padding-left: 10px; border-left: 2px solid var(--persimmon); color: var(--ink-soft); }
 .fds-comment-form { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
 .fds-comment-form input, .fds-comment-form textarea {
@@ -205,6 +226,7 @@
 .fds-thread-card-preview { font-size: 13px; color: var(--ink-soft); margin: 6px 0 0; }
 .fds-thread-card-meta { font-family: var(--font-mono); font-size: 10.5px; color: var(--ink-soft); text-transform: uppercase; letter-spacing: 0.04em; }
 .fds-thread-unseen-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: var(--red); flex-shrink: 0; }
+.fds-thread-card.locked { opacity: 0.65; }
 
 .fds-thread-back { margin-bottom: 14px; }
 .fds-thread-messages { display: flex; flex-direction: column; gap: 10px; max-height: 50vh; overflow-y: auto; margin: 14px 0; }

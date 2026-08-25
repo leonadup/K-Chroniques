@@ -1,10 +1,32 @@
 import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
+import { icon } from './icons.js';
 import { deriveDiscussionTitle } from './discussion-title.js';
-import { getPersonName } from './auth.js';
+import { getPersonName, getPersonId, checkPersonCode } from './auth.js';
 
 let circleId = null;
 let discussions = [];
+
+// Discussions privées : le déverrouillage n'est mémorisé que le temps de
+// l'onglet (sessionStorage), pas façon "souviens-toi de moi" — utile sur un
+// appareil partagé par plusieurs personnes du même cercle.
+function getUnlockedSet() {
+  try {
+    return new Set(JSON.parse(sessionStorage.getItem(`fds_unlocked_${circleId}`) || '[]'));
+  } catch {
+    return new Set();
+  }
+}
+
+function markUnlocked(discussionId) {
+  const set = getUnlockedSet();
+  set.add(discussionId);
+  sessionStorage.setItem(`fds_unlocked_${circleId}`, JSON.stringify([...set]));
+}
+
+function isLocked(d) {
+  return d.is_private && !getUnlockedSet().has(d.id);
+}
 
 export async function setupDiscussionsBox(circle) {
   circleId = circle;
@@ -71,6 +93,7 @@ function renderThreadList() {
       <p class="hint-text" style="margin-bottom:12px;">Pose une question, raconte-lui un truc, lance une conversation.</p>
       <div class="fds-comment-form" style="margin-bottom:18px;">
         <textarea placeholder="De quoi veux-tu parler ?" maxlength="1000" id="new-thread-body"></textarea>
+        <label class="check-item" style="margin:8px 0;"><input type="checkbox" id="new-thread-private" /> ${icon('lock', 13, 'icon-inline')} Discussion privée (protégée par un code d'accès)</label>
         <button class="btn btn-ghost" id="new-thread-submit">Créer</button>
       </div>
       <div class="fds-thread-list">
@@ -86,13 +109,24 @@ function renderThreadList() {
 }
 
 function threadCardHtml(d) {
+  if (isLocked(d)) {
+    return `
+      <div class="fds-thread-card locked" data-thread-open="${d.id}" role="button" tabindex="0">
+        <div class="fds-thread-card-top">
+          <span class="fds-thread-card-title">${icon('lock', 13, 'icon-inline')} Discussion privée</span>
+        </div>
+        <p class="fds-thread-card-preview">Code d'accès requis pour l'ouvrir.</p>
+      </div>
+    `;
+  }
+
   const messages = sortedMessages(d);
   const lastMsg = messages[messages.length - 1];
   const preview = lastMsg ? (lastMsg.body.length > 80 ? lastMsg.body.slice(0, 80).trimEnd() + '…' : lastMsg.body) : '';
   return `
     <div class="fds-thread-card" data-thread-open="${d.id}" role="button" tabindex="0">
       <div class="fds-thread-card-top">
-        <span class="fds-thread-card-title">${escapeHtml(d.title)}</span>
+        <span class="fds-thread-card-title">${d.is_private ? icon('lock', 12, 'icon-inline') + ' ' : ''}${escapeHtml(d.title)}</span>
         ${isUnseen(d) ? '<span class="fds-thread-unseen-dot"></span>' : ''}
       </div>
       ${lastMsg ? `<p class="fds-thread-card-preview"><b>${escapeHtml(lastMsg.is_moi ? 'Léona' : lastMsg.author_name)}</b> — ${escapeHtml(preview)}</p>` : ''}
@@ -107,49 +141,71 @@ async function createThread() {
   const body = bodyInput.value.trim();
   if (!author || !body) return;
 
+  const isPrivate = document.getElementById('new-thread-private').checked;
   const title = deriveDiscussionTitle(body);
-  const { data: discussion, error } = await supabase.from('discussions').insert({ circle_id: circleId, title }).select().single();
+  const { data: discussion, error } = await supabase
+    .from('discussions')
+    .insert({ circle_id: circleId, title, is_private: isPrivate })
+    .select()
+    .single();
   if (error || !discussion) return;
 
   const { data: message } = await supabase
     .from('discussion_messages')
-    .insert({ discussion_id: discussion.id, author_name: author, body, is_moi: false })
+    .insert({ discussion_id: discussion.id, author_name: author, body, is_moi: false, author_person_id: getPersonId() })
     .select()
     .single();
 
   discussion.discussion_messages = message ? [message] : [];
   discussions = [discussion, ...discussions];
+  if (isPrivate) markUnlocked(discussion.id);
   openThread(discussion.id);
 }
 
 function openThread(discussionId) {
   const d = discussions.find((x) => x.id === discussionId);
   if (!d) return;
+
+  if (isLocked(d)) {
+    renderUnlockForm(d);
+    return;
+  }
+
   const messages = sortedMessages(d);
   setSeenCount(d.id, messages.length);
   updateDiscussionsBadge();
 
+  const myId = getPersonId();
   const box = document.getElementById('discussion-box');
   box.innerHTML = `
     <div class="fds-question-panel">
       <button class="btn-link fds-thread-back" id="thread-back-btn">← Retour aux discussions</button>
-      <p class="fds-question-title">${escapeHtml(d.title)}</p>
+      <p class="fds-question-title">${d.is_private ? icon('lock', 14, 'icon-inline') + ' ' : ''}${escapeHtml(d.title)}</p>
       <div class="fds-thread-messages">
         ${
           messages.length === 0
             ? `<p class="hint-text">Pas encore de message.</p>`
             : messages
-                .map(
-                  (m) => `
+                .map((m) => {
+                  const canEdit = !!m.author_person_id && m.author_person_id === myId;
+                  return `
           <div class="fds-thread-message ${m.is_moi ? 'moi' : ''}">
             <div class="fds-thread-message-top">
               <span class="fds-thread-message-author">${escapeHtml(m.is_moi ? 'Léona' : m.author_name)}</span>
               <span class="fds-thread-message-date">${formatDate(m.created_at)}</span>
             </div>
-            <p class="fds-thread-message-body">${escapeHtml(m.body)}</p>
+            <p class="fds-thread-message-body" data-message-body="${m.id}">${escapeHtml(m.body)}</p>
+            ${
+              canEdit
+                ? `<div style="display:flex; gap:10px; margin-top:4px;">
+              <button class="btn-link" data-message-edit="${m.id}">Modifier</button>
+              <button class="btn-link" data-message-delete="${m.id}">Supprimer</button>
+            </div>`
+                : ''
+            }
           </div>
-        `
-                )
+        `;
+                })
                 .join('')
         }
       </div>
@@ -162,6 +218,96 @@ function openThread(discussionId) {
 
   document.getElementById('thread-back-btn').addEventListener('click', renderThreadList);
   document.getElementById('thread-reply-submit').addEventListener('click', () => replyToThread(d.id));
+  box.querySelectorAll('[data-message-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => startEditMessage(d, btn.dataset.messageEdit));
+  });
+  box.querySelectorAll('[data-message-delete]').forEach((btn) => {
+    btn.addEventListener('click', () => deleteMessage(d, btn.dataset.messageDelete));
+  });
+}
+
+function renderUnlockForm(d) {
+  const box = document.getElementById('discussion-box');
+  box.innerHTML = `
+    <div class="fds-question-panel">
+      <button class="btn-link fds-thread-back" id="thread-back-btn">← Retour aux discussions</button>
+      <p class="fds-question-title">${icon('lock', 15, 'icon-inline')} Discussion privée</p>
+      <p class="hint-text" style="margin-bottom:12px;">Cette discussion est protégée. Saisis un code d'accès personnel pour l'ouvrir.</p>
+      <div class="field">
+        <label>Code d'accès</label>
+        <div class="pw-wrap">
+          <input type="password" id="unlock-code-input" maxlength="80" />
+          <button type="button" class="pw-toggle" id="unlock-code-toggle" aria-label="Afficher le code"></button>
+        </div>
+      </div>
+      <p class="error-text" id="unlock-error" style="display:none">Code invalide.</p>
+      <button class="btn" id="unlock-submit">Déverrouiller</button>
+    </div>
+  `;
+
+  document.getElementById('thread-back-btn').addEventListener('click', renderThreadList);
+  const unlockInput = document.getElementById('unlock-code-input');
+  const unlockToggle = document.getElementById('unlock-code-toggle');
+  unlockToggle.innerHTML = icon('eye', 18);
+  unlockToggle.addEventListener('click', () => {
+    const showing = unlockInput.type === 'text';
+    unlockInput.type = showing ? 'password' : 'text';
+    unlockToggle.innerHTML = icon(showing ? 'eye' : 'eyeOff', 18);
+  });
+  document.getElementById('unlock-submit').addEventListener('click', async () => {
+    const code = document.getElementById('unlock-code-input').value.trim();
+    const errorEl = document.getElementById('unlock-error');
+    errorEl.style.display = 'none';
+    if (!code) return;
+    const person = await checkPersonCode(code);
+    if (!person) {
+      errorEl.style.display = 'block';
+      return;
+    }
+    markUnlocked(d.id);
+    openThread(d.id);
+  });
+}
+
+function startEditMessage(d, messageId) {
+  const message = (d.discussion_messages || []).find((m) => m.id === messageId);
+  const bodyEl = document.querySelector(`[data-message-body="${messageId}"]`);
+  if (!message || !bodyEl) return;
+
+  bodyEl.outerHTML = `
+    <div class="fds-thread-message-body" data-message-body="${messageId}">
+      <textarea maxlength="1000" style="width:100%; resize:vertical; min-height:60px;" data-message-edit-input="${messageId}">${escapeHtml(message.body)}</textarea>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button class="btn-link" data-message-save="${messageId}">Enregistrer</button>
+        <button class="btn-link" data-message-cancel="${messageId}">Annuler</button>
+      </div>
+    </div>
+  `;
+  document.querySelector(`[data-message-save="${messageId}"]`).addEventListener('click', () => saveMessageEdit(d, messageId));
+  document.querySelector(`[data-message-cancel="${messageId}"]`).addEventListener('click', () => openThread(d.id));
+}
+
+async function saveMessageEdit(d, messageId) {
+  const textarea = document.querySelector(`[data-message-edit-input="${messageId}"]`);
+  const body = textarea.value.trim();
+  if (!body) return;
+
+  const { error } = await supabase.from('discussion_messages').update({ body }).eq('id', messageId);
+  if (error) return;
+
+  const message = (d.discussion_messages || []).find((m) => m.id === messageId);
+  if (message) message.body = body;
+  openThread(d.id);
+}
+
+async function deleteMessage(d, messageId) {
+  if (!confirm('Supprimer ce message ?')) return;
+
+  const { error } = await supabase.from('discussion_messages').delete().eq('id', messageId);
+  if (error) return;
+
+  d.discussion_messages = (d.discussion_messages || []).filter((m) => m.id !== messageId);
+  openThread(d.id);
 }
 
 async function replyToThread(discussionId) {
@@ -174,7 +320,7 @@ async function replyToThread(discussionId) {
 
   const { data, error } = await supabase
     .from('discussion_messages')
-    .insert({ discussion_id: discussionId, author_name: author, body, is_moi: false })
+    .insert({ discussion_id: discussionId, author_name: author, body, is_moi: false, author_person_id: getPersonId() })
     .select()
     .single();
   if (error || !data) return;

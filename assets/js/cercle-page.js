@@ -420,8 +420,15 @@ function commentThreadHtml(entry) {
             (c) => `
           <div class="fds-comment">
             <div class="fds-comment-row">
-              <span><b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}</span>
-              ${mine.has(c.id) && c.circle_id === circleId ? `<button class="fds-comment-delete" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">${icon('x', 12)}</button>` : ''}
+              <span data-comment-body="${c.id}"><b>${escapeHtml(c.author_name)}</b> — ${escapeHtml(c.body)}</span>
+              ${
+                mine.has(c.id) && c.circle_id === circleId
+                  ? `<span style="display:flex; gap:6px; flex-shrink:0;">
+                <button class="fds-comment-delete fds-comment-edit" data-comment-edit="${c.id}" data-comment-edit-entry="${entry.id}" title="Modifier mon commentaire">${icon('edit', 12)}</button>
+                <button class="fds-comment-delete" data-comment-delete="${c.id}" data-comment-delete-entry="${entry.id}" title="Supprimer mon commentaire">${icon('x', 12)}</button>
+              </span>`
+                  : ''
+              }
             </div>
             ${c.reply_text ? `<div class="fds-question-reply">${escapeHtml(c.reply_text)}</div>` : ''}
           </div>
@@ -447,6 +454,42 @@ function wireEntryCards(container) {
   container.querySelectorAll('[data-comment-delete]').forEach((btn) => {
     btn.addEventListener('click', () => deleteComment(btn.dataset.commentDeleteEntry, btn.dataset.commentDelete));
   });
+  container.querySelectorAll('[data-comment-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => startEditComment(btn.dataset.commentEditEntry, btn.dataset.commentEdit));
+  });
+}
+
+function startEditComment(entryId, commentId) {
+  const entry = allEntries.find((e) => e.id === entryId);
+  const comment = (entry?.comments || []).find((c) => c.id === commentId);
+  const bodyEl = document.querySelector(`[data-comment-body="${commentId}"]`);
+  if (!comment || !bodyEl) return;
+
+  bodyEl.outerHTML = `
+    <span data-comment-body="${commentId}" style="display:block; width:100%;">
+      <textarea maxlength="1000" style="width:100%; resize:vertical; min-height:50px;" data-comment-edit-input="${commentId}">${escapeHtml(comment.body)}</textarea>
+      <div style="display:flex; gap:10px; margin-top:4px;">
+        <button class="btn-link" data-comment-save="${commentId}">Enregistrer</button>
+        <button class="btn-link" data-comment-cancel="${commentId}">Annuler</button>
+      </div>
+    </span>
+  `;
+  document.querySelector(`[data-comment-save="${commentId}"]`).addEventListener('click', () => saveCommentEdit(entryId, commentId));
+  document.querySelector(`[data-comment-cancel="${commentId}"]`).addEventListener('click', () => refreshEntryCard(entry));
+}
+
+async function saveCommentEdit(entryId, commentId) {
+  const entry = allEntries.find((e) => e.id === entryId);
+  const textarea = document.querySelector(`[data-comment-edit-input="${commentId}"]`);
+  const body = textarea.value.trim();
+  if (!entry || !body) return;
+
+  const { error } = await supabase.from('comments').update({ body }).eq('id', commentId);
+  if (error) return;
+
+  const comment = (entry.comments || []).find((c) => c.id === commentId);
+  if (comment) comment.body = body;
+  refreshEntryCard(entry);
 }
 
 async function toggleReaction(entryId, emoji) {

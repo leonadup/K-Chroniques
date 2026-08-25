@@ -9,7 +9,11 @@ const NON_ADMIN_CIRCLES = Object.values(CIRCLES).filter((c) => !c.isAdmin);
 /** Nombre d'entrées (par type) ayant au moins un commentaire pas encore vu
  * par Moi — alimente les badges rouges des onglets Récits/Lettres. */
 export async function countUnreadComments() {
-  const { data } = await supabase.from('comments').select('entry_id, entries!inner(type)').eq('seen_by_moi', false);
+  const { data, error } = await supabase.from('comments').select('entry_id, entries!inner(type)').eq('seen_by_moi', false);
+  if (error) {
+    console.error('countUnreadComments:', error.message);
+    return { recit: 0, lettre: 0 };
+  }
   const counts = { recit: 0, lettre: 0 };
   const seenEntries = new Set();
   (data || []).forEach((c) => {
@@ -309,10 +313,18 @@ function renderNotifyEditor(el, entry, successMessage) {
 }
 
 async function renderEngagementEditor(el, entryId) {
-  const [{ data: comments }, { data: reactions }] = await Promise.all([
+  const [{ data: comments, error: commentsError }, { data: reactions }] = await Promise.all([
     supabase.from('comments').select('id, circle_id, author_name, body, reply_text, created_at, seen_by_moi').eq('entry_id', entryId).order('created_at', { ascending: true }),
-    supabase.from('reactions').select('emoji').eq('entry_id', entryId)
+    supabase.from('reactions').select('emoji, circle_id, person_name').eq('entry_id', entryId)
   ]);
+
+  if (commentsError) {
+    el.innerHTML = `
+      <p style="font-family:var(--font-serif); font-size:18px; font-weight:600; margin:0 0 10px;">Réactions & commentaires</p>
+      <p class="error-text">Impossible de charger les commentaires : ${escapeHtml(commentsError.message)}</p>
+    `;
+    return;
+  }
 
   // Ouvrir l'entrée = les commentaires sont considérés vus : éteint le
   // badge de l'onglet et réarme la notif push pour un futur commentaire
@@ -324,10 +336,20 @@ async function renderEngagementEditor(el, entryId) {
   }
 
   const tally = {};
-  (reactions || []).forEach((r) => (tally[r.emoji] = (tally[r.emoji] || 0) + 1));
+  (reactions || []).forEach((r) => {
+    const who = r.person_name || CIRCLES[r.circle_id]?.label || r.circle_id;
+    (tally[r.emoji] ||= []).push(who);
+  });
   const tallyHtml = Object.entries(tally)
-    .map(([emoji, count]) => `<span class="adm-reaction-tally">${emoji} ${count}</span>`)
-    .join(' ');
+    .map(
+      ([emoji, names]) => `
+      <p style="margin:0 0 6px; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
+        <span class="adm-reaction-tally">${emoji} ${names.length}</span>
+        <span class="hint-text">${escapeHtml(names.join(', '))}</span>
+      </p>
+    `
+    )
+    .join('');
 
   el.innerHTML = `
     <p style="font-family:var(--font-serif); font-size:18px; font-weight:600; margin:0 0 10px;">Réactions & commentaires</p>

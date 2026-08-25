@@ -302,6 +302,43 @@ Enfin, active les notifications depuis `moi.html` elle-même (bouton
 "🔕 Activer les notifs" en haut) si ce n'est pas déjà fait — voir
 étape 6 ci-dessus.
 
+### 8. (Optionnel) Notification à Moi quand on répond dans une discussion
+
+Même principe que l'étape 7, mais pour les Discussions : Léona est notifiée
+(push) quand une personne répond dans un fil — au plus une notif par fil
+tant qu'elle ne l'a pas rouvert dans l'admin (onglet Discussions).
+
+```
+supabase functions deploy notify-discussion-message --no-verify-jwt
+```
+
+Puis crée un nouveau **Database Webhook** (Dashboard → **Database** →
+**Webhooks**) :
+
+- Table : `discussion_messages`
+- Events : `Insert`
+- Type : `Supabase Edge Functions`
+- Function : `notify-discussion-message`
+
+Réutilise les mêmes clés VAPID déjà configurées à l'étape 3 — rien de plus
+à faire côté secrets. Active les notifications depuis `moi.html` si ce
+n'est pas déjà fait (voir étape 6).
+
 ## Ce qu'il reste à faire
 
-- Rien pour l'instant — testé en navigateur réel, tout est bon.
+- **SQL Editor** → exécute
+  [`supabase/migrations/015_edition_personnes_messages_discussions_privees.sql`](supabase/migrations/015_edition_personnes_messages_discussions_privees.sql)
+  (sûr à rejouer même si une partie est déjà en place, tout est écrit en
+  `if not exists` / `drop policy if exists`). C'est ce qui active la
+  modification d'un commentaire déjà envoyé (nouveau bouton crayon sous
+  chaque récit/lettre) — le reste du fichier (personnes, messages de
+  discussion, discussions privées) est déjà en place en prod.
+- (Optionnel) Étape 8 ci-dessus — déployer `notify-discussion-message` et
+  créer son Database Webhook — pour être notifiée quand on te répond dans
+  une discussion.
+- Testé : navigation swipe-back, œil afficher/masquer mot de passe, et
+  toutes les pages sans code personnel (aucune erreur console). Pas testé
+  en conditions réelles (avec un vrai code personnel / compte Moi) faute
+  d'identifiants — vérifie une fois en ligne que l'édition des
+  commentaires, des messages de discussion et des personnes fonctionne
+  bien de bout en bout.

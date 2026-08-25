@@ -33,6 +33,15 @@ function showLogin() {
   document.getElementById('login-wrap').style.display = '';
   document.getElementById('adm-root').style.display = 'none';
 
+  const passwordInput = document.getElementById('moi-password');
+  const passwordToggle = document.getElementById('moi-password-toggle');
+  passwordToggle.innerHTML = icon('eye', 18);
+  passwordToggle.addEventListener('click', () => {
+    const showing = passwordInput.type === 'text';
+    passwordInput.type = showing ? 'password' : 'text';
+    passwordToggle.innerHTML = icon(showing ? 'eye' : 'eyeOff', 18);
+  });
+
   document.getElementById('moi-login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const email = document.getElementById('moi-email').value.trim();

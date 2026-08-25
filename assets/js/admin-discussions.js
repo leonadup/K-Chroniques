@@ -1,6 +1,7 @@
 import { supabase } from './supabase-client.js';
 import { CIRCLES } from './circles.js';
 import { escapeHtml } from './utils.js';
+import { icon } from './icons.js';
 
 export async function countUnreadDiscussions() {
   const { data } = await supabase
@@ -65,7 +66,7 @@ function threadRowHtml(d) {
   return `
     <div class="adm-list-item" data-thread-open="${d.id}">
       <span class="adm-list-item-title">
-        ${escapeHtml(CIRCLES[d.circle_id]?.label ?? d.circle_id)} · ${escapeHtml(d.title)}
+        ${escapeHtml(CIRCLES[d.circle_id]?.label ?? d.circle_id)} · ${d.is_private ? icon('lock', 12, 'icon-inline') + ' ' : ''}${escapeHtml(d.title)}
         ${isUnreadForMoi(d) ? '<span class="adm-unread-dot"></span>' : ''}
       </span>
       <span class="adm-list-item-meta">${messages.length} message${messages.length !== 1 ? 's' : ''} · ${new Date(d.last_message_at).toLocaleDateString('fr-FR')}</span>
@@ -93,7 +94,7 @@ async function renderThreadDetailAdmin(container, discussionId, showArchived = f
   container.innerHTML = `
     <button class="btn-link" id="thread-back-btn" style="margin-bottom:14px;">← Retour à la liste</button>
     <div class="mf-panel">
-      <p class="adm-list-item-meta" style="margin-bottom:10px;">${escapeHtml(CIRCLES[discussion.circle_id]?.label ?? discussion.circle_id)}</p>
+      <p class="adm-list-item-meta" style="margin-bottom:10px;">${escapeHtml(CIRCLES[discussion.circle_id]?.label ?? discussion.circle_id)}${discussion.is_private ? ` · ${icon('lock', 11, 'icon-inline')} Privée` : ''}</p>
       <div class="adm-title-edit">
         <input type="text" id="thread-title-input" value="${escapeHtml(discussion.title)}" />
         <button class="btn-link" id="thread-title-save">Enregistrer le titre</button>
@@ -112,7 +113,15 @@ async function renderThreadDetailAdmin(container, discussionId, showArchived = f
               <span class="adm-thread-message-author">${escapeHtml(m.author_name)}</span>
               <span class="adm-thread-message-date">${new Date(m.created_at).toLocaleString('fr-FR')}</span>
             </div>
-            <p class="adm-thread-message-body">${escapeHtml(m.body)}</p>
+            <p class="adm-thread-message-body" data-message-body="${m.id}">${escapeHtml(m.body)}</p>
+            ${
+              m.is_moi
+                ? `<div style="display:flex; gap:10px; margin-top:4px;">
+              <button class="btn-link" data-message-edit="${m.id}">Modifier</button>
+              <button class="btn-link" data-message-delete="${m.id}">Supprimer</button>
+            </div>`
+                : ''
+            }
           </div>
         `
                 )
@@ -160,5 +169,43 @@ async function renderThreadDetailAdmin(container, discussionId, showArchived = f
     if (!confirm('Supprimer cette discussion et tous ses messages, définitivement ?')) return;
     await supabase.from('discussions').delete().eq('id', discussionId);
     renderDiscussionsAdmin(container, showArchived);
+  });
+
+  container.querySelectorAll('[data-message-edit]').forEach((btn) => {
+    btn.addEventListener('click', () => startEditMessage(container, messages, btn.dataset.messageEdit, discussionId, showArchived));
+  });
+  container.querySelectorAll('[data-message-delete]').forEach((btn) => {
+    btn.addEventListener('click', async () => {
+      if (!confirm('Supprimer ce message ?')) return;
+      await supabase.from('discussion_messages').delete().eq('id', btn.dataset.messageDelete);
+      renderThreadDetailAdmin(container, discussionId, showArchived);
+    });
+  });
+}
+
+function startEditMessage(container, messages, messageId, discussionId, showArchived) {
+  const message = (messages || []).find((m) => m.id === messageId);
+  const bodyEl = container.querySelector(`[data-message-body="${messageId}"]`);
+  if (!message || !bodyEl) return;
+
+  bodyEl.outerHTML = `
+    <div class="adm-thread-message-body" data-message-body="${messageId}">
+      <textarea maxlength="1000" style="width:100%; resize:vertical; min-height:60px;" data-message-edit-input="${messageId}">${escapeHtml(message.body)}</textarea>
+      <div style="display:flex; gap:10px; margin-top:6px;">
+        <button class="btn-link" data-message-save="${messageId}">Enregistrer</button>
+        <button class="btn-link" data-message-cancel="${messageId}">Annuler</button>
+      </div>
+    </div>
+  `;
+
+  container.querySelector(`[data-message-save="${messageId}"]`).addEventListener('click', async () => {
+    const textarea = container.querySelector(`[data-message-edit-input="${messageId}"]`);
+    const body = textarea.value.trim();
+    if (!body) return;
+    await supabase.from('discussion_messages').update({ body }).eq('id', messageId);
+    renderThreadDetailAdmin(container, discussionId, showArchived);
+  });
+  container.querySelector(`[data-message-cancel="${messageId}"]`).addEventListener('click', () => {
+    renderThreadDetailAdmin(container, discussionId, showArchived);
   });
 }

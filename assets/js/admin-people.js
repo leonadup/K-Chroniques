@@ -80,25 +80,109 @@ function renderView(container, people) {
     renderView(container, people);
   });
 
-  container.querySelectorAll('[data-person-delete]').forEach((btn) => {
-    btn.addEventListener('click', async () => {
-      if (!confirm('Supprimer cette personne ? Son code ne fonctionnera plus.')) return;
-      const id = btn.dataset.personDelete;
-      await supabase.from('people').delete().eq('id', id);
-      renderView(container, people.filter((p) => p.id !== id));
-    });
+  container.querySelectorAll('[data-person-row]').forEach((row) => {
+    wireRow(container, row, people);
+  });
+}
+
+function wireEditRow(container, row, people) {
+  const id = row.dataset.personRow;
+  const person = people.find((p) => p.id === id);
+
+  row.querySelector('[data-person-cancel]').addEventListener('click', () => {
+    row.outerHTML = personHtml(person);
+    wireRow(container, container.querySelector(`[data-person-row="${id}"]`), people);
+  });
+
+  row.querySelector('[data-person-save]').addEventListener('click', async () => {
+    const errorEl = row.querySelector('[data-person-error]');
+    errorEl.style.display = 'none';
+
+    const name = row.querySelector('[data-person-name-input]').value.trim();
+    const circleId = row.querySelector('[data-person-circle-input]').value;
+    const accessCode = row.querySelector('[data-person-code-input]').value.trim();
+    const active = row.querySelector('[data-person-active-input]').checked;
+    if (!name || !accessCode) {
+      errorEl.textContent = 'Renseigne un prénom et un code.';
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    const { data, error } = await supabase
+      .from('people')
+      .update({ name, circle_id: circleId, access_code: accessCode, active })
+      .eq('id', id)
+      .select()
+      .single();
+
+    if (error) {
+      errorEl.textContent = error.message.includes('duplicate') ? 'Ce code est déjà utilisé par quelqu\'un d\'autre.' : error.message;
+      errorEl.style.display = 'block';
+      return;
+    }
+
+    Object.assign(person, data);
+    row.outerHTML = personHtml(person);
+    wireRow(container, container.querySelector(`[data-person-row="${id}"]`), people);
+  });
+}
+
+function wireRow(container, row, people) {
+  const id = row.dataset.personRow;
+  row.querySelector('[data-person-edit]').addEventListener('click', () => {
+    const person = people.find((p) => p.id === id);
+    row.outerHTML = personEditHtml(person);
+    wireEditRow(container, container.querySelector(`[data-person-row="${id}"]`), people);
+  });
+  row.querySelector('[data-person-delete]').addEventListener('click', async () => {
+    if (!confirm('Supprimer cette personne ? Son code ne fonctionnera plus.')) return;
+    await supabase.from('people').delete().eq('id', id);
+    renderView(container, people.filter((p) => p.id !== id));
   });
 }
 
 function personHtml(person) {
   const groupLabel = CIRCLES[person.circle_id]?.label || person.circle_id;
   return `
-    <div class="adm-list-item" style="cursor:default;">
+    <div class="adm-list-item" style="cursor:default;${person.active === false ? ' opacity:0.55;' : ''}" data-person-row="${person.id}">
       <div>
         <span class="adm-list-item-title">${escapeHtml(person.name)}</span>
+        ${person.active === false ? `<span class="adm-draft-tag">Bloqué</span>` : ''}
         <span class="adm-list-item-meta" style="margin-left:8px;">${escapeHtml(groupLabel)} · code : ${escapeHtml(person.access_code)}</span>
       </div>
-      <button class="mf-del" data-person-delete="${person.id}" title="Supprimer">${icon('x', 13)}</button>
+      <div style="display:flex; gap:10px; align-items:center;">
+        <button class="btn-link" data-person-edit="${person.id}">Modifier</button>
+        <button class="mf-del" data-person-delete="${person.id}" title="Supprimer">${icon('x', 13)}</button>
+      </div>
+    </div>
+  `;
+}
+
+function personEditHtml(person) {
+  return `
+    <div class="mf-panel" data-person-row="${person.id}" style="margin-bottom:12px;">
+      <div class="field">
+        <label>Prénom</label>
+        <input type="text" maxlength="60" value="${escapeHtml(person.name)}" data-person-name-input />
+      </div>
+      <div class="field">
+        <label>Groupe</label>
+        <select data-person-circle-input>
+          ${GROUPS.map((c) => `<option value="${c.id}" ${c.id === person.circle_id ? 'selected' : ''}>${escapeHtml(c.label)}</option>`).join('')}
+        </select>
+      </div>
+      <div class="field">
+        <label>Code personnel</label>
+        <input type="text" maxlength="80" value="${escapeHtml(person.access_code)}" data-person-code-input />
+      </div>
+      <div class="field">
+        <label class="check-item"><input type="checkbox" data-person-active-input ${person.active === false ? '' : 'checked'} /> Compte actif</label>
+      </div>
+      <p class="error-text" data-person-error style="display:none"></p>
+      <div style="display:flex; gap:10px;">
+        <button class="btn" data-person-save>Enregistrer</button>
+        <button class="btn btn-ghost" data-person-cancel>Annuler</button>
+      </div>
     </div>
   `;
 }

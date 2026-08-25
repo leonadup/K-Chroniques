@@ -30,7 +30,10 @@ const PATHS = {
   bell: `<path d="M6 9a6 6 0 0 1 12 0c0 5 2 6 2 6H4s2-1 2-6Z"/><path d="M10 20a2 2 0 0 0 4 0"/>`,
   bellOff: `<path d="M6 9a6 6 0 0 1 9.5-4.9"/><path d="M18 9c0 5 2 6 2 6H8"/><path d="M4 4l16 16"/><path d="M10 20a2 2 0 0 0 4 0"/>`,
   heart: `<path d="M12 20s-7-4.35-9.5-8.5C.7 8 2 4.5 5.5 4a5 5 0 0 1 6.5 2 5 5 0 0 1 6.5-2C22 4.5 23.3 8 21.5 11.5 19 15.65 12 20 12 20Z" fill="currentColor" stroke="none"/>`,
-  lock: `<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>`
+  lock: `<rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>`,
+  eye: `<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7-10-7-10-7Z"/><circle cx="12" cy="12" r="3"/>`,
+  eyeOff: `<path d="M9.5 9.9a3 3 0 0 0 4.2 4.2"/><path d="M6.5 6.6C3.8 8.3 2 12 2 12s3.5 7 10 7c1.5 0 2.9-.3 4.1-.9"/><path d="M17.4 17.4A10.4 10.4 0 0 0 22 12s-3.5-7-10-7c-1 0-2 .15-2.9.45"/><path d="M3 3l18 18"/>`,
+  edit: `<path d="M12 20h9"/><path d="M16.5 3.5a2.1 2.1 0 0 1 3 3L7 19l-4 1 1-4Z"/>`
 };
 
 export function icon(name, size = 20, extraClass = '') {

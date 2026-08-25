@@ -44,7 +44,10 @@ export async function checkPersonCode(code) {
 export function requireCircleOrRedirect() {
   const person = getPerson();
   if (!person?.circleId) {
-    window.location.href = 'acceder.html';
+    // replace() plutôt que href : ce redirect est automatique (pas un vrai
+    // clic), donc cercle.html ne doit pas rester dans l'historique — sinon
+    // un swipe-back (iOS, en PWA installée) y ramène après la connexion.
+    window.location.replace('acceder.html');
     return null;
   }
   return person.circleId;
