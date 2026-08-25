@@ -745,3 +745,9 @@ alter table discussions add column if not exists is_private boolean not null def
 
 create policy "commentaires modifiables par tous (auteur)" on comments
   for update using (true) with check (true);
+
+-- ---------------------------------------------------------------------------
+-- Migration 016 — code dédié par discussion privée, au lieu de réutiliser
+-- n'importe quel code personnel valide (voir supabase/migrations/016_code_discussion_privee.sql)
+-- ---------------------------------------------------------------------------
+alter table discussions add column if not exists private_code text;

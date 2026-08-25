@@ -94,7 +94,7 @@ async function renderThreadDetailAdmin(container, discussionId, showArchived = f
   container.innerHTML = `
     <button class="btn-link" id="thread-back-btn" style="margin-bottom:14px;">← Retour à la liste</button>
     <div class="mf-panel">
-      <p class="adm-list-item-meta" style="margin-bottom:10px;">${escapeHtml(CIRCLES[discussion.circle_id]?.label ?? discussion.circle_id)}${discussion.is_private ? ` · ${icon('lock', 11, 'icon-inline')} Privée` : ''}</p>
+      <p class="adm-list-item-meta" style="margin-bottom:10px;">${escapeHtml(CIRCLES[discussion.circle_id]?.label ?? discussion.circle_id)}${discussion.is_private ? ` · ${icon('lock', 11, 'icon-inline')} Privée — code : ${escapeHtml(discussion.private_code || '—')}` : ''}</p>
       <div class="adm-title-edit">
         <input type="text" id="thread-title-input" value="${escapeHtml(discussion.title)}" />
         <button class="btn-link" id="thread-title-save">Enregistrer le titre</button>

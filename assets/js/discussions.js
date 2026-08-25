@@ -2,7 +2,7 @@ import { supabase } from './supabase-client.js';
 import { escapeHtml } from './utils.js';
 import { icon } from './icons.js';
 import { deriveDiscussionTitle } from './discussion-title.js';
-import { getPersonName, getPersonId, checkPersonCode } from './auth.js';
+import { getPersonName, getPersonId } from './auth.js';
 
 let circleId = null;
 let discussions = [];
@@ -26,6 +26,10 @@ function markUnlocked(discussionId) {
 
 function isLocked(d) {
   return d.is_private && !getUnlockedSet().has(d.id);
+}
+
+function normalizeCode(code) {
+  return (code || '').trim().toLowerCase();
 }
 
 export async function setupDiscussionsBox(circle) {
@@ -93,7 +97,13 @@ function renderThreadList() {
       <p class="hint-text" style="margin-bottom:12px;">Pose une question, raconte-lui un truc, lance une conversation.</p>
       <div class="fds-comment-form" style="margin-bottom:18px;">
         <textarea placeholder="De quoi veux-tu parler ?" maxlength="1000" id="new-thread-body"></textarea>
-        <label class="check-item" style="margin:8px 0;"><input type="checkbox" id="new-thread-private" /> ${icon('lock', 13, 'icon-inline')} Discussion privée (protégée par un code d'accès)</label>
+        <label class="check-item" style="margin:8px 0;"><input type="checkbox" id="new-thread-private" /> ${icon('lock', 13, 'icon-inline')} Discussion privée (protégée par un code que tu choisis)</label>
+        <div class="field" id="new-thread-private-code-field" style="display:none; flex:1 1 100%; margin:0 0 8px;">
+          <label>Code d'accès à choisir</label>
+          <input type="text" id="new-thread-private-code" maxlength="80" placeholder="Ex : un mot que toi seule et la personne concernée connaîtrez" />
+          <p class="hint-text">Léona voit toujours le contenu sans code. Ce code sert à protéger le fil des autres personnes de ton cercle — communique-le toi-même à qui doit pouvoir le lire.</p>
+        </div>
+        <p class="error-text" id="new-thread-error" style="display:none; flex:1 1 100%; margin:0;"></p>
         <button class="btn btn-ghost" id="new-thread-submit">Créer</button>
       </div>
       <div class="fds-thread-list">
@@ -103,6 +113,9 @@ function renderThreadList() {
   `;
 
   document.getElementById('new-thread-submit').addEventListener('click', createThread);
+  document.getElementById('new-thread-private').addEventListener('change', (e) => {
+    document.getElementById('new-thread-private-code-field').style.display = e.target.checked ? '' : 'none';
+  });
   box.querySelectorAll('[data-thread-open]').forEach((el) => {
     el.addEventListener('click', () => openThread(el.dataset.threadOpen));
   });
@@ -142,10 +155,19 @@ async function createThread() {
   if (!author || !body) return;
 
   const isPrivate = document.getElementById('new-thread-private').checked;
+  const privateCode = document.getElementById('new-thread-private-code').value.trim();
+  const errorEl = document.getElementById('new-thread-error');
+  errorEl.style.display = 'none';
+  if (isPrivate && !privateCode) {
+    errorEl.textContent = 'Choisis un code pour protéger cette discussion privée.';
+    errorEl.style.display = 'block';
+    return;
+  }
+
   const title = deriveDiscussionTitle(body);
   const { data: discussion, error } = await supabase
     .from('discussions')
-    .insert({ circle_id: circleId, title, is_private: isPrivate })
+    .insert({ circle_id: circleId, title, is_private: isPrivate, private_code: isPrivate ? privateCode : null })
     .select()
     .single();
   if (error || !discussion) return;
@@ -232,7 +254,7 @@ function renderUnlockForm(d) {
     <div class="fds-question-panel">
       <button class="btn-link fds-thread-back" id="thread-back-btn">← Retour aux discussions</button>
       <p class="fds-question-title">${icon('lock', 15, 'icon-inline')} Discussion privée</p>
-      <p class="hint-text" style="margin-bottom:12px;">Cette discussion est protégée. Saisis un code d'accès personnel pour l'ouvrir.</p>
+      <p class="hint-text" style="margin-bottom:12px;">Cette discussion est protégée par un code choisi par la personne qui l'a créée (ce n'est pas ton code personnel de connexion) — demande-le-lui si tu ne l'as pas.</p>
       <div class="field">
         <label>Code d'accès</label>
         <div class="pw-wrap">
@@ -254,13 +276,11 @@ function renderUnlockForm(d) {
     unlockInput.type = showing ? 'password' : 'text';
     unlockToggle.innerHTML = icon(showing ? 'eye' : 'eyeOff', 18);
   });
-  document.getElementById('unlock-submit').addEventListener('click', async () => {
-    const code = document.getElementById('unlock-code-input').value.trim();
+  document.getElementById('unlock-submit').addEventListener('click', () => {
+    const code = document.getElementById('unlock-code-input').value;
     const errorEl = document.getElementById('unlock-error');
     errorEl.style.display = 'none';
-    if (!code) return;
-    const person = await checkPersonCode(code);
-    if (!person) {
+    if (!code || normalizeCode(code) !== normalizeCode(d.private_code)) {
       errorEl.style.display = 'block';
       return;
     }

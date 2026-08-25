@@ -407,7 +407,9 @@ function renderPhotosEditor(el, entryId, photos, allowedVisibility) {
   el.innerHTML = `
     <p class="hint-text" style="margin-bottom:12px;">
       Les photos sont redimensionnées et compressées automatiquement dans le navigateur avant l'envoi.
-      Laisse la visibilité vide pour qu'elle suive celle de l'entrée.
+      Laisse la visibilité vide pour qu'elle suive celle de l'entrée. Tu peux sélectionner plusieurs
+      photos à la fois (Ctrl/Cmd-clic dans la fenêtre de sélection) — la légende ci-dessous s'applique
+      alors à toutes.
     </p>
     <div id="photos-list">
       ${photos
@@ -424,7 +426,7 @@ function renderPhotosEditor(el, entryId, photos, allowedVisibility) {
     </div>
 
     <div class="field" style="margin-top:14px;">
-      <label>Légende (optionnel, s'applique à la prochaine photo)</label>
+      <label>Légende (optionnel, s'applique à toutes les photos ajoutées)</label>
       <input type="text" id="photo-caption" />
     </div>
     <div class="field">
@@ -436,8 +438,8 @@ function renderPhotosEditor(el, entryId, photos, allowedVisibility) {
 
     <p class="error-text" id="photo-error" style="display:none;"></p>
 
-    <input type="file" accept="image/*" id="photo-file" style="display:none;" />
-    <button class="btn" id="photo-add-btn">Ajouter une photo</button>
+    <input type="file" accept="image/*" id="photo-file" multiple style="display:none;" />
+    <button class="btn" id="photo-add-btn">Ajouter des photos</button>
   `;
 
   el.querySelectorAll('[data-del-photo]').forEach((btn) => {
@@ -453,45 +455,52 @@ function renderPhotosEditor(el, entryId, photos, allowedVisibility) {
   addBtn.addEventListener('click', () => fileInput.click());
 
   fileInput.addEventListener('change', async () => {
-    const file = fileInput.files?.[0];
-    if (!file) return;
+    const files = Array.from(fileInput.files || []);
+    if (files.length === 0) return;
     const errorEl = document.getElementById('photo-error');
     errorEl.style.display = 'none';
     addBtn.disabled = true;
 
-    try {
-      addBtn.textContent = 'Compression…';
-      const compressed = await compressImage(file);
+    const caption = document.getElementById('photo-caption').value.trim();
+    const visibility = allowedVisibility
+      .filter((c) => document.querySelector(`[data-photo-vis="${c.id}"]`)?.checked)
+      .map((c) => c.id);
 
-      addBtn.textContent = 'Envoi…';
-      const path = `${entryId}/${crypto.randomUUID()}.jpg`;
-      const { error: uploadError } = await supabase.storage.from('photos').upload(path, compressed, { contentType: 'image/jpeg' });
-      if (uploadError) throw uploadError;
+    const { data: countRows } = await supabase.from('entry_photos').select('id').eq('entry_id', entryId);
+    let sortOrder = (countRows || []).length;
+    const failed = [];
 
-      const caption = document.getElementById('photo-caption').value.trim();
-      const visibility = allowedVisibility
-        .filter((c) => document.querySelector(`[data-photo-vis="${c.id}"]`)?.checked)
-        .map((c) => c.id);
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const progress = files.length > 1 ? ` (${i + 1}/${files.length})` : '';
+      try {
+        addBtn.textContent = `Compression…${progress}`;
+        const compressed = await compressImage(file);
 
-      const { data: countRows } = await supabase.from('entry_photos').select('id').eq('entry_id', entryId);
-      const sortOrder = (countRows || []).length;
+        addBtn.textContent = `Envoi…${progress}`;
+        const path = `${entryId}/${crypto.randomUUID()}.jpg`;
+        const { error: uploadError } = await supabase.storage.from('photos').upload(path, compressed, { contentType: 'image/jpeg' });
+        if (uploadError) throw uploadError;
 
-      await supabase.from('entry_photos').insert({
-        entry_id: entryId,
-        storage_path: path,
-        caption: caption || null,
-        sort_order: sortOrder,
-        visibility: visibility.length > 0 ? visibility : null
-      });
-
-      const { data } = await supabase.from('entry_photos').select('*').eq('entry_id', entryId).order('sort_order');
-      renderPhotosEditor(el, entryId, data || [], allowedVisibility);
-    } catch (err) {
-      errorEl.textContent = err instanceof Error ? err.message : "Échec de l'ajout de la photo.";
-      errorEl.style.display = 'block';
-      addBtn.disabled = false;
-      addBtn.textContent = 'Ajouter une photo';
-      fileInput.value = '';
+        await supabase.from('entry_photos').insert({
+          entry_id: entryId,
+          storage_path: path,
+          caption: caption || null,
+          sort_order: sortOrder,
+          visibility: visibility.length > 0 ? visibility : null
+        });
+        sortOrder += 1;
+      } catch (err) {
+        failed.push(`${file.name} : ${err instanceof Error ? err.message : 'échec'}`);
+      }
     }
+
+    if (failed.length > 0) {
+      errorEl.textContent = failed.join(' · ');
+      errorEl.style.display = 'block';
+    }
+
+    const { data } = await supabase.from('entry_photos').select('*').eq('entry_id', entryId).order('sort_order');
+    renderPhotosEditor(el, entryId, data || [], allowedVisibility);
   });
 }
